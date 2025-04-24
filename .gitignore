@@ -1,0 +1,79 @@
+# =====================
+# Java + Maven Projects
+# =====================
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# Maven Wrapper
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# =====================
+# IDEs
+# =====================
+
+## IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+.idea/modules.xml
+.idea/jarRepositories.xml
+.idea/compiler.xml
+.idea/libraries/
+.idea/tasks.xml
+.idea/dictionaries
+.idea/vcs.xml
+
+## Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+
+## NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+## VS Code
+.vscode/
+
+# =====================
+# OS-Specific Trash
+# =====================
+
+## macOS
+.DS_Store
+
+## Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# =====================
+# Misc / Temp Files
+# =====================
+*.swp
+*.swo
+*.tmp
+*.bak
+*.orig
+*.rej
+*~
+logs/
+run/
