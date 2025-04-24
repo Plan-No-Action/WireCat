@@ -77,3 +77,6 @@ Desktop.ini
 *~
 logs/
 run/
+
+*.pdf
+*.mdj
