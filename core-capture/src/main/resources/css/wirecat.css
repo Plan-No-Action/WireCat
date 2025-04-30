@@ -1,0 +1,60 @@
+.root {
+  -fx-font-family: "Segoe UI", sans-serif;
+  -fx-base: #2b2b2b;
+  -fx-background-color: #2b2b2b;
+  -fx-text-fill: #e0e0e0;
+}
+
+.header {
+  -fx-background-color: #232323;
+  -fx-padding: 10;
+}
+
+.header-label {
+  -fx-text-fill: white;
+  -fx-font-size: 18px;
+  -fx-font-weight: bold;
+}
+
+.button, .combo-box {
+  -fx-background-color: #3a3a3a;
+  -fx-text-fill: #e0e0e0;
+}
+
+.table-view {
+  -fx-table-cell-border-color: transparent;
+  -fx-table-header-border-color: transparent;
+}
+
+.table-view .column-header, 
+.table-view .filler {
+  -fx-background-color: #232323;
+  -fx-border-width: 0 0 1 0;
+  -fx-border-color: #3a3a3a;
+}
+
+.table-row-cell:filled:selected, 
+.table-cell:filled:selected {
+  -fx-background-color: #3a3a3a;
+}
+
+.chart-legend-item-symbol {
+  -fx-padding: 0.3em;
+}
+
+.vbox, .hbox {
+  -fx-spacing: 8;
+}
+
+.section-title {
+  -fx-text-fill: #cfcfcf;
+  -fx-font-weight: bold;
+}
+
+.hex-dump, .ascii-dump {
+  -fx-background-color: #1e1e1e;
+  -fx-font-family: "Consolas", monospace;
+  -fx-font-size: 11px;
+  -fx-text-fill: #9cdcfe;
+  -fx-padding: 8;
+}
