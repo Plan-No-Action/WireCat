@@ -1,27 +1,38 @@
 package com.wirecat.core_capture;
-import javafx.beans.property.*;
+
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 public class Packet {
-    private final IntegerProperty no = new SimpleIntegerProperty();
-    private final StringProperty time = new SimpleStringProperty();
-    private final StringProperty src = new SimpleStringProperty();
-    private final StringProperty dst = new SimpleStringProperty();
-    private final StringProperty proto = new SimpleStringProperty();
-    private final IntegerProperty len = new SimpleIntegerProperty();
+    private final IntegerProperty no;
+    private final StringProperty time;
+    private final StringProperty src;
+    private final StringProperty dst;
+    private final StringProperty proto;
+    private final IntegerProperty len;
+    private final StringProperty hexDump;
+    private final StringProperty asciiDump;
 
-    public Packet(int no, String time, String src, String dst, String proto, int len) {
-        this.no.set(no);
-        this.time.set(time);
-        this.src.set(src);
-        this.dst.set(dst);
-        this.proto.set(proto);
-        this.len.set(len);
+    public Packet(int no, String time, String src, String dst, String proto, int len,
+                  String hexDump, String asciiDump) {
+        this.no = new SimpleIntegerProperty(no);
+        this.time = new SimpleStringProperty(time);
+        this.src = new SimpleStringProperty(src);
+        this.dst = new SimpleStringProperty(dst);
+        this.proto = new SimpleStringProperty(proto);
+        this.len = new SimpleIntegerProperty(len);
+        this.hexDump = new SimpleStringProperty(hexDump);
+        this.asciiDump = new SimpleStringProperty(asciiDump);
     }
 
-    public IntegerProperty noProperty() { return no; }
-    public StringProperty timeProperty() { return time; }
-    public StringProperty srcProperty() { return src; }
-    public StringProperty dstProperty() { return dst; }
-    public StringProperty protoProperty() { return proto; }
-    public IntegerProperty lenProperty() { return len; }
+    public int getNo() { return no.get(); }
+    public String getTime() { return time.get(); }
+    public String getSrc() { return src.get(); }
+    public String getDst() { return dst.get(); }
+    public String getProto() { return proto.get(); }
+    public int getLen() { return len.get(); }
+    public String getHexDump() { return hexDump.get(); }
+    public String getAsciiDump() { return asciiDump.get(); }
 }
