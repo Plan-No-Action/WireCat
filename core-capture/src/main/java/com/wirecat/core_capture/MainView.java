@@ -19,6 +19,9 @@ import javafx.stage.Stage;
 
 import java.io.File;
 
+import com.wirecat.core_capture.filter.FilterEngine;
+import com.wirecat.core_capture.inspector.PacketInspector;
+
 public class MainView {
 
     private final ObservableList<Packet> packetList = FXCollections.observableArrayList();
