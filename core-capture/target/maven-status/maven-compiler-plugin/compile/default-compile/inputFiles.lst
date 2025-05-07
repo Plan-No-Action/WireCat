@@ -1,6 +1,8 @@
-C:\Users\0xyac\Documents\Dev\wirecat\core-capture\src\main\java\com\wirecat\core_capture\WireCatApp.java
-C:\Users\0xyac\Documents\Dev\wirecat\core-capture\src\main\java\com\wirecat\core_capture\MainView.java
-C:\Users\0xyac\Documents\Dev\wirecat\core-capture\src\main\java\com\wirecat\core_capture\PacketModel.java
-C:\Users\0xyac\Documents\Dev\wirecat\core-capture\src\main\java\com\wirecat\core_capture\SettingsView.java
-C:\Users\0xyac\Documents\Dev\wirecat\core-capture\src\main\java\com\wirecat\core_capture\CaptureService.java
-C:\Users\0xyac\Documents\Dev\wirecat\core-capture\src\main\java\com\wirecat\core_capture\Packet.java
+C:\Users\0xyac\Documents\Dev\Github\WireCat\core-capture\src\main\java\com\wirecat\core_capture\CaptureService.java
+C:\Users\0xyac\Documents\Dev\Github\WireCat\core-capture\src\main\java\com\wirecat\core_capture\filter\FilterEngine.java
+C:\Users\0xyac\Documents\Dev\Github\WireCat\core-capture\src\main\java\com\wirecat\core_capture\SettingsView.java
+C:\Users\0xyac\Documents\Dev\Github\WireCat\core-capture\src\main\java\com\wirecat\core_capture\PacketModel.java
+C:\Users\0xyac\Documents\Dev\Github\WireCat\core-capture\src\main\java\com\wirecat\core_capture\inspector\PacketInspector.java
+C:\Users\0xyac\Documents\Dev\Github\WireCat\core-capture\src\main\java\com\wirecat\core_capture\WireCatApp.java
+C:\Users\0xyac\Documents\Dev\Github\WireCat\core-capture\src\main\java\com\wirecat\core_capture\CapturedPacket.java
+C:\Users\0xyac\Documents\Dev\Github\WireCat\core-capture\src\main\java\com\wirecat\core_capture\MainView.java

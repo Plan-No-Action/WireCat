@@ -12,110 +12,45 @@ import javafx.stage.Stage;
 import org.pcap4j.core.PcapNetworkInterface;
 import org.pcap4j.core.Pcaps;
 
-import java.util.Collections;
 import java.util.List;
 
 public class SettingsView {
+    private final CaptureService svc = new CaptureService();
+    private final List<PcapNetworkInterface> devs = safeFind();
 
-    private final CaptureService captureService;
-    private final List<PcapNetworkInterface> devices;
-
-    public SettingsView() {
-        this.captureService = new CaptureService();
-        List<PcapNetworkInterface> devs;
-        try {
-            devs = Pcaps.findAllDevs();
-        } catch (Exception e) {
-            e.printStackTrace();
-            devs = Collections.emptyList();
-        }
-        this.devices = devs;
+    private static List<PcapNetworkInterface> safeFind(){
+        try { return Pcaps.findAllDevs(); }
+        catch(Exception e){ return List.of(); }
     }
 
-    public void show(Stage stage) {
-        // Title
+    public void show(Stage s){
         Label title = new Label("WireCat Settings");
-        title.getStyleClass().add("settings-title");
+        ComboBox<String> cb = new ComboBox<>();
+        ObservableList<String> opts = FXCollections.observableArrayList();
+        if(devs.isEmpty()) opts.add("❌ No interfaces found");
+        else devs.forEach(d -> opts.add(d.getDescription()!=null?d.getDescription():d.getName()));
+        cb.setItems(opts); if(!opts.isEmpty()) cb.getSelectionModel().selectFirst();
 
-        // Interface selection
-        Label ifaceLabel = new Label("Capture Interface:");
-        ComboBox<String> ifaceComboBox = new ComboBox<>();
-
-        // Populate descriptions
-        ObservableList<String> interfaceDescriptions = FXCollections.observableArrayList();
-        if (devices.isEmpty()) {
-            interfaceDescriptions.add("No interfaces found");
-        } else {
-            for (PcapNetworkInterface dev : devices) {
-                String desc = dev.getDescription() != null
-                        ? dev.getDescription()
-                        : dev.getName();
-                interfaceDescriptions.add(desc);
-            }
-        }
-        ifaceComboBox.setItems(interfaceDescriptions);
-        ifaceComboBox.getStyleClass().add("protocol-combo");
-        if (!interfaceDescriptions.isEmpty()) {
-            ifaceComboBox.getSelectionModel().selectFirst();
-        }
-
-        // Optional capture filter
-        Label filterLabel = new Label("Filter (BPF, optional):");
-        TextField filterField = new TextField();
-        filterField.getStyleClass().add("filter-field");
-
-        // Packet limit
-        Label limitLabel = new Label("Packet Limit:");
-        Spinner<Integer> packetLimit = new Spinner<>(1, 100000, 1000);
-        packetLimit.getStyleClass().add("limit-spinner");
-
-        // Start button
-        Button startButton = new Button("Start Capture");
-        startButton.getStyleClass().add("start-button");
-        startButton.setOnAction(e -> {
-            String selected = ifaceComboBox.getValue();
-            if (selected == null || selected.startsWith("No ")) {
-                new Alert(Alert.AlertType.ERROR, "Select a valid interface.")
-                        .show();
-                return;
-            }
-            String iface = devices.stream()
-                    .filter(dev -> selected.equals(dev.getDescription())
-                            || selected.equals(dev.getName()))
-                    .map(PcapNetworkInterface::getName)
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Interface not found: " + selected));
-
-            String filter = filterField.getText().trim();
-            int limit = packetLimit.getValue();
-
-            // Launch capture and switch to main view
-            captureService.startCapture(iface, filter, limit);
-            new MainView(captureService).show(stage);
+        TextField filter = new TextField();
+        Spinner<Integer> limit = new Spinner<>(1,100_000,1000);
+        Button go = new Button("Start Capture");
+        go.setOnAction(e -> {
+            String sel = cb.getValue();
+            if(sel==null || sel.startsWith("❌")){ alert("Select valid interface"); return; }
+            PcapNetworkInterface d = devs.stream().filter(v -> sel.equals(v.getDescription())||sel.equals(v.getName())).findFirst().orElse(null);
+            if(d==null){ alert("Cannot resolve interface"); return; }
+            svc.start(d, filter.getText().trim(), limit.getValue());
+            new MainView(svc).show(s);
         });
 
-        // Layout form
-        VBox form = new VBox(12,
-                title,
-                ifaceLabel, ifaceComboBox,
-                filterLabel, filterField,
-                limitLabel, packetLimit,
-                startButton
-        );
-        form.setAlignment(Pos.TOP_LEFT);
-        form.setPadding(new Insets(20));
+        VBox form = new VBox(12,title,new Label("Interface:"),cb,
+                new Label("BPF filter (opt):"),filter,
+                new Label("Packet limit:"),limit,go);
+        form.setPadding(new Insets(20)); form.setAlignment(Pos.TOP_LEFT);
 
-        BorderPane root = new BorderPane(form);
-        root.setPadding(new Insets(10));
-
-        Scene scene = new Scene(root, 360, 400);
-        scene.getStylesheets().add(
-                getClass().getResource("/dark-theme.css").toExternalForm()
-        );
-
-        stage.setScene(scene);
-        stage.setTitle("Settings - WireCat");
-        stage.show();
+        Scene sc = new Scene(new BorderPane(form),360,400);
+        sc.getStylesheets().add(getClass().getResource("/dark-theme.css").toExternalForm());
+        s.setScene(sc); s.setTitle("Settings – WireCat"); s.show();
     }
+    private static void alert(String m){ new Alert(Alert.AlertType.ERROR,m).show(); }
 }
