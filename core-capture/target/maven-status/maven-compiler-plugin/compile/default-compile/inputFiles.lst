@@ -4,5 +4,11 @@ C:\Users\0xyac\Documents\Dev\Github\WireCat\core-capture\src\main\java\com\wirec
 C:\Users\0xyac\Documents\Dev\Github\WireCat\core-capture\src\main\java\com\wirecat\core_capture\PacketModel.java
 C:\Users\0xyac\Documents\Dev\Github\WireCat\core-capture\src\main\java\com\wirecat\core_capture\inspector\PacketInspector.java
 C:\Users\0xyac\Documents\Dev\Github\WireCat\core-capture\src\main\java\com\wirecat\core_capture\WireCatApp.java
+<<<<<<< Updated upstream
 C:\Users\0xyac\Documents\Dev\Github\WireCat\core-capture\src\main\java\com\wirecat\core_capture\CapturedPacket.java
 C:\Users\0xyac\Documents\Dev\Github\WireCat\core-capture\src\main\java\com\wirecat\core_capture\MainView.java
+=======
+C:\Users\0xyac\Documents\Dev\Github\WireCat\core-capture\src\main\java\com\wirecat\core_capture\MainView.java
+C:\Users\0xyac\Documents\Dev\Github\WireCat\core-capture\src\main\java\com\wirecat\core_capture\PacketDetail.java
+C:\Users\0xyac\Documents\Dev\Github\WireCat\core-capture\src\main\java\com\wirecat\core_capture\Packet.java
+>>>>>>> Stashed changes
