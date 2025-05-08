@@ -2,20 +2,16 @@
 
 package com.wirecat.core_capture;
 
-<<<<<<< Updated upstream
 import org.pcap4j.core.*;
 import org.pcap4j.packet.Packet;
 import org.pcap4j.packet.namednumber.DataLinkType;
 
-import java.io.File;
 import java.sql.Timestamp;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedTransferQueue;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
+// Removed unused import for AtomicInteger
 
-=======
 import org.pcap4j.core.Pcaps;
 import org.pcap4j.core.PcapNetworkInterface;
 import org.pcap4j.core.PcapHandle;
@@ -32,10 +28,8 @@ import java.util.function.Consumer;
 /**
  * Live‐capture service; stores PacketModel list for UI + inspector lookup.
  */
->>>>>>> Stashed changes
 public class CaptureService {
     private PcapHandle handle;
-<<<<<<< Updated upstream
     private Thread producer;
 
     private final LinkedTransferQueue<PacketModel> queue = new LinkedTransferQueue<>();
@@ -88,7 +82,7 @@ public class CaptureService {
              PcapDumper d = dead.dumpOpen(f.getAbsolutePath())) {
 
             queue.forEach(pm -> {
-                Packet p = pm.getRaw();
+                org.pcap4j.packet.Packet p = (org.pcap4j.packet.Packet) pm.getRaw();
                 if(p!=null){
                     try{ d.dump(p, new Timestamp(System.currentTimeMillis())); }
                     catch(Exception ignored){}
@@ -96,7 +90,8 @@ public class CaptureService {
             });
             emit("💾 Saved → "+f.getAbsolutePath());
         } catch(Exception e){ emit("❌ Save failed: "+e.getMessage()); }
-=======
+    }
+    
     private Thread captureThread;
     private Consumer<PacketModel> packetListener;
     private final List<PacketModel> capturedPackets = new CopyOnWriteArrayList<>();
@@ -155,7 +150,6 @@ public class CaptureService {
 
     public void saveCapture(File file) {
         throw new UnsupportedOperationException("saveCapture() not yet implemented");
->>>>>>> Stashed changes
     }
 
     /** Retrieve the PacketModel by 1-based table index. */
