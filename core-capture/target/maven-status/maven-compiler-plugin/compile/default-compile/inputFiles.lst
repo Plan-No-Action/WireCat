@@ -1,8 +1,10 @@
 /home/abuuda/Documents/FAC/WireCat/core-capture/src/main/java/com/wirecat/core_capture/Packet.java
 /home/abuuda/Documents/FAC/WireCat/core-capture/src/main/java/com/wirecat/core_capture/inspector/PacketInspector.java
+/home/abuuda/Documents/FAC/WireCat/core-capture/src/main/java/com/wirecat/core_capture/PacketDetail.java
 /home/abuuda/Documents/FAC/WireCat/core-capture/src/main/java/com/wirecat/core_capture/SettingsView.java
-/home/abuuda/Documents/FAC/WireCat/core-capture/src/main/java/com/wirecat/core_capture/filter/FilterEngine.java
 /home/abuuda/Documents/FAC/WireCat/core-capture/src/main/java/com/wirecat/core_capture/WireCatApp.java
+/home/abuuda/Documents/FAC/WireCat/core-capture/src/main/java/com/wirecat/core_capture/filter/FilterEngine.java
 /home/abuuda/Documents/FAC/WireCat/core-capture/src/main/java/com/wirecat/core_capture/CaptureService.java
 /home/abuuda/Documents/FAC/WireCat/core-capture/src/main/java/com/wirecat/core_capture/PacketModel.java
+/home/abuuda/Documents/FAC/WireCat/core-capture/src/main/java/com/wirecat/core_capture/CapturedPacket.java
 /home/abuuda/Documents/FAC/WireCat/core-capture/src/main/java/com/wirecat/core_capture/MainView.java

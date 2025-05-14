@@ -2,88 +2,122 @@ package com.wirecat.core_capture;
 
 import org.pcap4j.core.*;
 import org.pcap4j.packet.Packet;
+import org.pcap4j.packet.namednumber.DataLinkType;
 
 import java.io.File;
+import java.sql.Timestamp;
 import java.util.List;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
- * CaptureService handles live packet capture via Pcap4J,
- * streams PacketModel instances to the UI, and provides
- * a stub for saving captured data to a file.
+ * Live‐capture service; feeds PacketModel into capturedPackets for UI.
  */
 public class CaptureService {
 
     private PcapHandle handle;
     private Thread captureThread;
-    private Consumer<PacketModel> packetListener;
+    private final LinkedTransferQueue<PacketModel> queue = new LinkedTransferQueue<>();
 
-    /**
-     * Register a callback to receive PacketModel objects on each captured packet.
-     *
-     * @param listener a Consumer that processes PacketModel instances
-     */
-    public void setOnPacketCaptured(Consumer<PacketModel> listener) {
-        this.packetListener = listener;
+    /** Expose the internal queue of PacketModel **/
+    public LinkedTransferQueue<PacketModel> queue() {
+        return queue;
     }
 
+    // Shared list observed by UI
+    private final CopyOnWriteArrayList<PacketModel> capturedPackets = new CopyOnWriteArrayList<>();
+    // New queue for MainView to poll packets
+
+    // For status updates in UI
+    private Consumer<String> statusConsumer;
+    public void onStatus(Consumer<String> c){ statusConsumer = c; }
+    private void emitStatus(String s){
+        if(statusConsumer != null) statusConsumer.accept(s);
+    }
+
+    // Packet callback for UI charts/stats
+    private Consumer<PacketModel> packetListener;
+    public void setOnPacketCaptured(Consumer<PacketModel> listener){
+        packetListener = listener;
+    }
+
+    /** Expose the live list as an unmodifiable view */
+    public List<PacketModel> getCapturedPackets(){
+        return List.copyOf(capturedPackets);
+    }
+
+
     /**
-     * Starts live capture on the specified network interface.
-     *
-     * @param ifaceName the name of the interface (e.g., "eth0")
-     * @param filter    an optional BPF filter string (empty for none)
-     * @param limit     the maximum number of packets to capture before stopping
+     * Start live capture on the given interface name.
+     * @param ifaceName  network interface name (from Pcaps.findAllDevs())
+     * @param bpfFilter  BPF filter string; null or empty for none
+     * @param limit      max packets to capture; 0 = unlimited
      */
-    public void startCapture(String ifaceName, String filter, int limit) {
-        captureThread = new Thread(() -> {
+    public void startCapture(String ifaceName, String bpfFilter, int limit){
+        // 1) Lookup the interface
+        PcapNetworkInterface device;
+        try {
+            device = Pcaps.findAllDevs().stream()
+                .filter(d -> d.getName().equals(ifaceName))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Interface not found"));
+        } catch (Exception e) {
+            emitStatus("❌ Error listing devices: " + e.getMessage());
+            return;
+        }
+
+        // 2) Open live with snaplen=65536, promisc=true, timeout=50ms
+        try {
+            handle = device.openLive(
+                65536,
+                PcapNetworkInterface.PromiscuousMode.PROMISCUOUS,
+                50
+            );
+        } catch (PcapNativeException e) {
+            emitStatus("❌ Failed to open interface: " + e.getMessage());
+            return;
+        }
+
+        // 3) Apply BPF filter if provided
+        if (bpfFilter != null && !bpfFilter.isBlank()) {
             try {
-                // Discover network interfaces
-                List<PcapNetworkInterface> devices = Pcaps.findAllDevs();
-                PcapNetworkInterface device = devices.stream()
-                        .filter(dev -> dev.getName().equals(ifaceName))
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalArgumentException(
-                                "Interface not found: " + ifaceName));
+                handle.setFilter(bpfFilter, BpfProgram.BpfCompileMode.OPTIMIZE);
+            } catch (PcapNativeException | NotOpenException e) {
+                emitStatus("❌ BPF filter failed: " + e.getMessage());
+            }
+        }
 
-                // Open live capture handle
-                handle = device.openLive(65536,
-                        PcapNetworkInterface.PromiscuousMode.PROMISCUOUS,
-                        10
-                );
+        // 4) Start background thread for capture loop
+        captureThread = new Thread(() -> {
+            emitStatus("▶ Capturing on " + ifaceName);
+            AtomicInteger counter = new AtomicInteger(0);
 
-                // Apply BPF filter if provided
-                if (filter != null && !filter.isBlank()) {
-                    handle.setFilter(filter, BpfProgram.BpfCompileMode.OPTIMIZE);
+            PacketListener listener = rawPkt -> {
+                int idx = counter.incrementAndGet();
+                // Build model and enqueue
+                PacketModel pm = PacketModel.fromRaw(rawPkt, idx);
+                capturedPackets.add(pm);
+                queue.offer(pm);
+                if (packetListener != null) {
+                    packetListener.accept(pm);
                 }
+                // Stop if limit reached
+                if (limit > 0 && idx >= limit) {
+                    try { handle.breakLoop(); }
+                    catch (NotOpenException ignored) {}
+                }
+            };
 
-                AtomicInteger count = new AtomicInteger(0);
-
-                // Loop indefinitely; break when count >= limit
-                handle.loop(-1, (PacketListener) rawPacket -> {
-                    int current = count.incrementAndGet();
-                    PacketModel model = PacketModel.fromRaw(rawPacket, current);
-
-                    if (packetListener != null) {
-                        packetListener.accept(model);
-                    }
-
-                    if (current >= limit) {
-                        try {
-                            handle.breakLoop();
-                        } catch (NotOpenException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-
+            try {
+                handle.loop(-1, listener);
             } catch (Exception e) {
-                e.printStackTrace();
+                emitStatus("❌ Capture error: " + e.getMessage());
             } finally {
-                // Ensure handle is closed
-                if (handle != null && handle.isOpen()) {
+                if (handle.isOpen()) {
                     handle.close();
                 }
+                emitStatus("■ Capture stopped");
             }
         }, "WireCat-Capture-Thread");
 
@@ -91,35 +125,30 @@ public class CaptureService {
         captureThread.start();
     }
 
-    /**
-     * Stops the active capture session and interrupts the capture thread.
-     */
-    public void stopCapture() {
+    /** Stop capture early */
+    public void stopCapture(){
         if (handle != null && handle.isOpen()) {
-            try {
-                handle.breakLoop();
-                handle.close();
-            } catch (NotOpenException e) {
-                e.printStackTrace();
-            } finally {
-                handle = null;
-            }
+            try { handle.breakLoop(); }
+            catch (NotOpenException ignored) {}
         }
         if (captureThread != null) {
             captureThread.interrupt();
         }
     }
 
-    /**
-     * Stub for saving captured packets to a PCAP file.
-     * To be implemented: buffer packets in memory and
-     * write them out with PcapDumper.
-     *
-     * @param file the destination .pcap file
-     */
-    public void saveCapture(File file) {
-        // TODO: implement real PCAP dumping using Pcaps.openDead()
-        // and PcapDumper.dumpOpen(), then iterate your packet buffer.
-        throw new UnsupportedOperationException("saveCapture() not yet implemented");
+    /** Export to PCAP file */
+    public void save(File outFile){
+        try (PcapHandle dead = Pcaps.openDead(DataLinkType.EN10MB, 65536);
+             PcapDumper dumper = dead.dumpOpen(outFile.getAbsolutePath())) {
+
+            for (PacketModel pm : capturedPackets) {
+                Packet raw = pm.getRaw();
+                dumper.dump(raw, new Timestamp(System.currentTimeMillis()));
+            }
+            emitStatus("💾 Saved to " + outFile.getAbsolutePath());
+        } catch (Exception e){
+            emitStatus("❌ Save failed: " + e.getMessage());
+        }
     }
+    
 }
