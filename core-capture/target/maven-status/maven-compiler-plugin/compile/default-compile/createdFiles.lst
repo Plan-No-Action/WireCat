@@ -7,5 +7,6 @@ com/wirecat/core_capture/filter/FilterEngine.class
 com/wirecat/core_capture/MainView.class
 com/wirecat/core_capture/MainView$1.class
 com/wirecat/core_capture/WireCatApp.class
+com/wirecat/core_capture/MainView$2.class
 com/wirecat/core_capture/Packet.class
 com/wirecat/core_capture/CapturedPacket.class
