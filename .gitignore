@@ -1,6 +1,7 @@
 # =====================
 # Java + Maven Projects
 # =====================
+bin/
 target/
 !**/src/main/**/target/
 !**/src/test/**/target/
