@@ -1,6 +1,3 @@
-/* ------------------------------------------------------------
-   Fundamental color palette & typography
------------------------------------------------------------- */
 .root {
     -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
     -fx-base:            #1e1e1e;    /* primary background */

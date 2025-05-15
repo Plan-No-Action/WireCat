@@ -1,28 +1,31 @@
 package com.wirecat.core_capture.filter;
 
-import com.wirecat.core_capture.Packet;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
+import com.wirecat.core_capture.CapturedPacket;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
-/**
- * Encapsulates all packet‐filtering logic.
- */
 public class FilterEngine {
-    private final ObservableList<Packet> masterList;
-
-    public FilterEngine(ObservableList<Packet> masterList) {
-        this.masterList = masterList;
+    public static Predicate<CapturedPacket> byProtocol(String p) {
+        if ("All".equalsIgnoreCase(p)) return pkt -> true;
+        return pkt -> pkt.getProtocol().equalsIgnoreCase(p);
     }
 
-    /**
-     * Returns a live FilteredList that only shows packets matching the given protocol.
-     * Use "All" to disable filtering.
-     */
-    public FilteredList<Packet> filterByProtocol(String protocol) {
-        FilteredList<Packet> filtered = new FilteredList<>(masterList, p -> true);
-        if (protocol != null && !"All".equalsIgnoreCase(protocol)) {
-            filtered.setPredicate(p -> p.getProto().equalsIgnoreCase(protocol));
-        }
-        return filtered;
+    public static Predicate<CapturedPacket> byIp(String ip) {
+        if (ip == null || ip.isBlank()) return pkt -> true;
+        return pkt -> pkt.getSourceIP().equals(ip) ||
+                      pkt.getDestinationIP().equals(ip);
+    }
+
+    public static Predicate<CapturedPacket> byPort(int port) {
+        if (port <= 0) return pkt -> true;
+        return pkt -> pkt.getSourcePort() == port ||
+                      pkt.getDestinationPort() == port;
+    }
+
+    @SafeVarargs
+    public static Predicate<CapturedPacket> combine(
+            Predicate<CapturedPacket>... ps) {
+        return Stream.of(ps)
+                     .reduce(x -> true, Predicate::and);
     }
 }
