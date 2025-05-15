@@ -28,6 +28,9 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.function.Predicate;
 
+import com.wirecat.core_capture.filter.FilterEngine;
+import com.wirecat.core_capture.inspector.PacketInspector;
+
 public class MainView {
 
     private final ObservableList<CapturedPacket> packets = FXCollections.observableArrayList();
