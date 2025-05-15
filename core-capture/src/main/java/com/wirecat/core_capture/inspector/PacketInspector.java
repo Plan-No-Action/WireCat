@@ -46,4 +46,13 @@ public class PacketInspector {
 
         tree.setRoot(root);
     }
+    public void setAsciiMode(boolean selected) {
+        if (selected) {
+            tree.setShowRoot(false);
+            tree.setFixedCellSize(20);
+        } else {
+            tree.setShowRoot(true);
+            tree.setFixedCellSize(24);
+        }
+    }
 }

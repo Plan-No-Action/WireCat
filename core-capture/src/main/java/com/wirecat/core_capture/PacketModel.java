@@ -1,45 +1,35 @@
 package com.wirecat.core_capture;
 
+import javafx.beans.property.*;
+import org.pcap4j.packet.*;
+import org.pcap4j.packet.namednumber.TcpPort;
+
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.pcap4j.packet.EthernetPacket;
-import org.pcap4j.packet.TcpPacket;
-import org.pcap4j.packet.UdpPacket;
-
-import javafx.beans.property.*;
-
 public class PacketModel {
 
-    private final IntegerProperty no       = new SimpleIntegerProperty();
-    private final StringProperty  time     = new SimpleStringProperty();
-    private final StringProperty  src      = new SimpleStringProperty();
-    private final StringProperty  dst      = new SimpleStringProperty();
-    private final StringProperty  proto    = new SimpleStringProperty();
-    private final IntegerProperty srcPort  = new SimpleIntegerProperty();
-    private final IntegerProperty dstPort  = new SimpleIntegerProperty();
-    private final IntegerProperty len      = new SimpleIntegerProperty();
-    private final StringProperty  hexDump  = new SimpleStringProperty();
-    private final StringProperty  asciiDump= new SimpleStringProperty();
-    private final DoubleProperty  riskScore= new SimpleDoubleProperty();
+    private final IntegerProperty no = new SimpleIntegerProperty();
+    private final StringProperty time = new SimpleStringProperty();
+    private final StringProperty src = new SimpleStringProperty();
+    private final StringProperty dst = new SimpleStringProperty();
+    private final StringProperty proto = new SimpleStringProperty();
+    private final IntegerProperty srcPort = new SimpleIntegerProperty();
+    private final IntegerProperty dstPort = new SimpleIntegerProperty();
+    private final IntegerProperty len = new SimpleIntegerProperty();
+    private final StringProperty hexDump = new SimpleStringProperty();
+    private final StringProperty asciiDump = new SimpleStringProperty();
+    private final DoubleProperty riskScore = new SimpleDoubleProperty();
 
-    // Populated during fromRaw()
     private String srcMac = "—";
     private String dstMac = "—";
-    private final transient org.pcap4j.packet.Packet raw;
+    private final transient Packet raw;
 
-    public PacketModel(int no,
-                       String time,
-                       String src,
-                       String dst,
-                       String proto,
-                       int sp,
-                       int dp,
-                       int len,
-                       String hex,
-                       String ascii,
-                       double risk,
-                       org.pcap4j.packet.Packet raw) {
+    private String httpInfo = null; // 🆕 HTTP metadata
+
+    public PacketModel(int no, String time, String src, String dst, String proto,
+                       int sp, int dp, int len, String hex, String ascii, double risk, Packet raw) {
         this.no.set(no);
         this.time.set(time);
         this.src.set(src);
@@ -54,117 +44,113 @@ public class PacketModel {
         this.raw = raw;
     }
 
-    public static PacketModel fromRaw(org.pcap4j.packet.Packet raw, int idx) {
-        // timestamp string
+    public static PacketModel fromRaw(Packet raw, int idx) {
         String ts = java.time.LocalTime.now()
                 .format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss.SSS"));
 
-        // default MACs & payload
-        String srcMac="—", dstMac="—";
-        org.pcap4j.packet.Packet payload = raw;
+        String srcMac = "—", dstMac = "—", srcIp = "—", dstIp = "—", protocol = "N/A";
+        int sp = -1, dp = -1;
+        double risk = 0.0;
+        String httpInfo = null;
+
+        // Use Packet instead of CustomPacket
+        Packet layer3 = raw;
+
         if (raw.contains(EthernetPacket.class)) {
             EthernetPacket eth = raw.get(EthernetPacket.class);
             srcMac = eth.getHeader().getSrcAddr().toString();
             dstMac = eth.getHeader().getDstAddr().toString();
-            payload = eth.getPayload();
+            layer3 = eth.getPayload();
         }
 
-        // defaults
-        String srcIp="—", dstIp="—", protocol="N/A";
-        int sp=-1, dp=-1;
-        double risk=0.0;
-
-        // IPv4 with TCP/UDP
-        if (payload.contains(org.pcap4j.packet.IpV4Packet.class)) {
-            var ip4 = payload.get(org.pcap4j.packet.IpV4Packet.class);
+        if (layer3 != null && layer3.contains(IpV4Packet.class)) {
+            IpV4Packet ip4 = layer3.get(IpV4Packet.class);
             srcIp = ip4.getHeader().getSrcAddr().getHostAddress();
             dstIp = ip4.getHeader().getDstAddr().getHostAddress();
-            var l4 = ip4.getPayload();
-            if (l4!=null && l4.contains(TcpPacket.class)) {
-                var tcp = l4.get(TcpPacket.class);
-                protocol="TCP";
+            Packet layer4 = ip4.getPayload();
+
+            if (layer4 != null && layer4.contains(TcpPacket.class)) {
+                TcpPacket tcp = layer4.get(TcpPacket.class);
                 sp = tcp.getHeader().getSrcPort().valueAsInt();
                 dp = tcp.getHeader().getDstPort().valueAsInt();
-                // risk: SYN w/o ACK
-                risk = (tcp.getHeader().getSyn() && !tcp.getHeader().getAck())?0.7:0.1;
-            } else if (l4!=null && l4.contains(UdpPacket.class)) {
-                var udp = l4.get(UdpPacket.class);
-                protocol="UDP";
+                protocol = "TCP";
+
+                if (tcp.getHeader().getSyn() && !tcp.getHeader().getAck()) {
+                    risk = 0.7;
+                } else {
+                    risk = 0.1;
+                }
+
+                byte[] tcpPayload = tcp.getPayload() != null ? tcp.getPayload().getRawData() : new byte[0];
+                String payloadStr = new String(tcpPayload, StandardCharsets.UTF_8);
+
+                if (sp == 80 || dp == 80 || payloadStr.startsWith("GET") || payloadStr.startsWith("POST")) {
+                    protocol = "HTTP";
+                    httpInfo = extractHttpInfo(payloadStr);
+                } else if (sp == 443 || dp == 443) {
+                    protocol = "HTTPS";
+                }
+
+            } else if (layer4 != null && layer4.contains(UdpPacket.class)) {
+                UdpPacket udp = layer4.get(UdpPacket.class);
                 sp = udp.getHeader().getSrcPort().valueAsInt();
                 dp = udp.getHeader().getDstPort().valueAsInt();
+                protocol = "UDP";
             } else {
                 protocol = ip4.getHeader().getProtocol().name();
             }
         }
 
-        byte[] rawData = raw.getRawData();
-        // hex + ascii
-        StringBuilder hb = new StringBuilder(rawData.length*3);
-        StringBuilder ab = new StringBuilder(rawData.length);
-        for (byte b: rawData) {
-            hb.append(String.format("%02X ", b));
-            ab.append((b>=32 && b<127)?(char)b:'.');
+        // Create hex/ascii dump
+        byte[] rawBytes = raw.getRawData();
+        StringBuilder hex = new StringBuilder(rawBytes.length * 3);
+        StringBuilder ascii = new StringBuilder(rawBytes.length);
+        for (byte b : rawBytes) {
+            hex.append(String.format("%02X ", b));
+            ascii.append((b >= 32 && b <= 126) ? (char) b : '.');
         }
 
-        PacketModel pm = new PacketModel(
-            idx, ts, srcIp, dstIp, protocol,
-            sp, dp, rawData.length,
-            hb.toString().trim(), ab.toString(), risk, raw
-        );
+        PacketModel pm = new PacketModel(idx, ts, srcIp, dstIp, protocol,
+                sp, dp, rawBytes.length, hex.toString().trim(), ascii.toString(), risk, raw);
+
         pm.srcMac = srcMac;
         pm.dstMac = dstMac;
+        pm.httpInfo = httpInfo;
         return pm;
+    }
+
+    private static String extractHttpInfo(String data) {
+        int end = data.indexOf("\r\n");
+        return (end > 0) ? data.substring(0, end) : data.trim();
     }
 
     public CapturedPacket toPacket() {
         long tsMs = System.currentTimeMillis();
+        Map<String, String> info = new HashMap<>();
+        info.put("SrcPort", String.valueOf(getSrcPort()));
+        info.put("DstPort", String.valueOf(getDstPort()));
+        if (httpInfo != null) info.put("HTTP", httpInfo);
 
-        // build transport info map
-        Map<String,String> tinfo = new HashMap<>();
-        if ("TCP".equals(proto.get())) {
-            var tcp = raw.get(TcpPacket.class).getHeader();
-            StringBuilder flags = new StringBuilder();
-            if (tcp.getSyn()) flags.append("SYN ");
-            if (tcp.getAck()) flags.append("ACK ");
-            if (tcp.getFin()) flags.append("FIN ");
-            if (tcp.getRst()) flags.append("RST ");
-            tinfo.put("Flags", flags.toString().trim());
-        }
-        tinfo.put("SrcPort", String.valueOf(srcPort.get()));
-        tinfo.put("DstPort", String.valueOf(dstPort.get()));
-
-        PacketDetail detail = new PacketDetail(
-            srcMac, dstMac,
-            raw.contains(EthernetPacket.class)
-              ? raw.get(EthernetPacket.class).getHeader().getType().name()
-              : "N/A",
-            getSrc(), getDst(), getProto(),
-            getProto(), // use proto as transport name
-            tinfo
-        );
-
-        return new CapturedPacket(
-            getNo(), getTime(), tsMs, 0,
-            srcMac, dstMac,
-            getSrc(), getDst(), getProto(),
-            getSrcPort(), getDstPort(),
-            getLen(), getHexDump(), getAsciiDump(),
-            getRiskScore(), detail
-        );
+        return new CapturedPacket(getNo(), getTime(), tsMs, 0,
+                srcMac, dstMac, getSrc(), getDst(), getProto(),
+                getSrcPort(), getDstPort(), getLen(), getHexDump(), getAsciiDump(),
+                getRiskScore(), new PacketDetail(srcMac, dstMac, "Ethernet",
+                        getSrc(), getDst(), getProto(), getProto(), info));
     }
 
-    // getters for TableView binding...
+    public String getHttpInfo() { return httpInfo; }
 
-    public org.pcap4j.packet.Packet getRaw()    { return raw; }
-    public int   getNo()     { return no.get(); }
-    public String getTime()  { return time.get(); }
-    public String getSrc()   { return src.get(); }
-    public String getDst()   { return dst.get(); }
+    // --- Getters for JavaFX binding (required for TableView) ---
+    public Packet getRaw() { return raw; }
+    public int getNo() { return no.get(); }
+    public String getTime() { return time.get(); }
+    public String getSrc() { return src.get(); }
+    public String getDst() { return dst.get(); }
     public String getProto() { return proto.get(); }
-    public int   getSrcPort(){ return srcPort.get(); }
-    public int   getDstPort(){ return dstPort.get(); }
-    public int   getLen()    { return len.get(); }
-    public String getHexDump(){ return hexDump.get(); }
-    public String getAsciiDump(){ return asciiDump.get(); }
-    public double getRiskScore(){ return riskScore.get(); }
+    public int getSrcPort() { return srcPort.get(); }
+    public int getDstPort() { return dstPort.get(); }
+    public int getLen() { return len.get(); }
+    public String getHexDump() { return hexDump.get(); }
+    public String getAsciiDump() { return asciiDump.get(); }
+    public double getRiskScore() { return riskScore.get(); }
 }
