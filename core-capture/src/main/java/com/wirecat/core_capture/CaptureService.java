@@ -142,8 +142,7 @@ public class CaptureService {
              PcapDumper dumper = dead.dumpOpen(outFile.getAbsolutePath())) {
 
             for (PacketModel pm : capturedPackets) {
-                Packet raw = pm.getRaw();
-                dumper.dump(raw, new Timestamp(System.currentTimeMillis()));
+                dumper.dump(pm.getRaw(), new Timestamp(System.currentTimeMillis()));
             }
             emitStatus("💾 Saved to " + outFile.getAbsolutePath());
         } catch (Exception e){

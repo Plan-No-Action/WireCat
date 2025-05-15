@@ -6,7 +6,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-public class Packet {
+public class CustomPacket {
     private final IntegerProperty no;
     private final StringProperty time;
     private final StringProperty src;
@@ -16,7 +16,7 @@ public class Packet {
     private final StringProperty hexDump;
     private final StringProperty asciiDump;
 
-    public Packet(int no, String time, String src, String dst, String proto, int len,
+    public CustomPacket(int no, String time, String src, String dst, String proto, int len,
                   String hexDump, String asciiDump) {
         this.no        = new SimpleIntegerProperty(no);
         this.time      = new SimpleStringProperty(time);
