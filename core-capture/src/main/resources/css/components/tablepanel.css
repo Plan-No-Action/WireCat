@@ -1,94 +1,108 @@
+/* ----- TABLE PANEL MODERN UI ----- */
+
 .table-panel {
     -fx-background-color: transparent;
-    -fx-padding: 0 0 8 0;
-    -fx-border-radius: 14px;
-    -fx-effect: dropshadow(gaussian, #24292477, 28, 0.09, 0, 9);
+    -fx-padding: 0;
+    -fx-border-radius: 12px;
+    -fx-effect: dropshadow(gaussian, #21292133, 14, 0.08, 0, 6);
 }
 
 .table-view {
     -fx-background-color: #23272b;
     -fx-table-cell-border-color: transparent;
-    -fx-table-header-border-color: transparent;
-    -fx-border-radius: 14px;
-    -fx-background-radius: 14px;
+    -fx-table-header-border-color: #23272b;
+    -fx-border-radius: 11px;
+    -fx-background-radius: 11px;
     -fx-font-size: 13px;
     -fx-padding: 0;
 }
 
 .table-view .column-header-background {
-    -fx-background-color: #242b27;
-    -fx-border-color: #2b2f2e;
-    -fx-border-width: 0 0 3 0;
-    -fx-background-radius: 14px 14px 0 0;
-    -fx-padding: 0;
-    -fx-effect: dropshadow(gaussian, #1ee08144, 8, 0.08, 0, 2);
+    -fx-background-color: linear-gradient(to bottom, #242b26 82%, #181e18);
+    -fx-border-color: #292929;
+    -fx-border-width: 0 0 2 0;
+    -fx-background-radius: 10px 10px 0 0;
 }
 
 .table-view .column-header,
 .table-view .column-header .label {
-    -fx-text-fill: #90faad;
-    -fx-font-size: 14px;
-    -fx-font-weight: 600;
-    -fx-padding: 10 0 10 0;
+    -fx-text-fill: #8bf0ad;
+    -fx-font-size: 13.2px;
+    -fx-font-weight: bold;
+    -fx-padding: 7 0 7 0;
     -fx-background-color: transparent;
+    -fx-border-width: 0;
 }
 
-.table-row-cell {
+.table-row-cell:odd {
     -fx-background-color: #23272b;
-    -fx-border-color: transparent;
-    -fx-padding: 0;
-    -fx-background-radius: 8px;
 }
-.table-row-cell:odd { -fx-background-color: #252e2a; }
-.table-row-cell:even { -fx-background-color: #222629; }
-.table-row-cell:hover {
-    -fx-background-color: #303e34AA; /* semi-transparent greenish */
+.table-row-cell:even {
+    -fx-background-color: #202325;
+}
+.table-row-cell:hover, .table-row-cell:hover:selected {
+    -fx-background-color: #2a3332;
+    -fx-cursor: hand;
 }
 .table-row-cell:selected, .table-row-cell:focused:selected {
-    -fx-background-color: #40e99b !important;
-    -fx-text-fill: #181e19 !important;
-    -fx-effect: dropshadow(gaussian, #12fca9bb, 6, 0.09, 0, 0);
-}
-
-/* Risk badge for pill effect */
-.risk-badge {
-    -fx-background-radius: 12px;
-    -fx-padding: 2 12 2 12;
-    -fx-font-size: 13px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #181e19;
-    -fx-effect: dropshadow(gaussian, #ffffff22, 4, 0.1, 0, 1);
+    -fx-background-color: #50fa96;
+    -fx-text-fill: #222c20;
 }
 
 .table-view .placeholder .label {
-    -fx-text-fill: #7da18a;
-    -fx-font-size: 13.5px;
+    -fx-text-fill: #8e9eac;
     -fx-font-style: italic;
-    -fx-alignment: center;
 }
 
-/* New Row Highlight (fade in effect, JavaFX may need manual impl) */
-.table-row-cell.new-row {
-    -fx-background-color: #a7ffcb;
-    -fx-border-color: #57e89c;
-    -fx-border-width: 0 0 0 4;
-    -fx-transition: all 0.7s cubic-bezier(.42,0,.58,1);
+/* --- Custom column alignment --- */
+.table-cell {
+    -fx-alignment: CENTER-LEFT;
+    -fx-font-size: 13px;
+    -fx-padding: 3 10 3 10;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: #23272b;
 }
 
-/* Custom scrollbars */
+.table-cell .label {
+    -fx-font-size: 13px;
+}
+
+/* --- Risk Badge --- */
+.risk-badge {
+    -fx-background-radius: 7px;
+    -fx-padding: 2 13 2 13;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e231b;
+    -fx-border-radius: 7px;
+    -fx-effect: dropshadow(gaussian, #21292122, 2, 0.08, 0, 1);
+}
+.risk-badge:filled {
+    -fx-text-fill: #23272b;
+}
+
+/* --- Scrollbars --- */
 .table-view .virtual-flow .scroll-bar:vertical {
-    -fx-background-color: #242b27;
-    -fx-pref-width: 7px;
+    -fx-background-color: #262d29;
+    -fx-pref-width: 11px;
+    -fx-background-radius: 8px;
 }
 .table-view .virtual-flow .scroll-bar .thumb {
-    -fx-background-color: #40e99b;
-    -fx-background-radius: 12px;
-    -fx-pref-width: 5px;
+    -fx-background-color: #2df785cc;
+    -fx-background-radius: 8px;
 }
 
+/* --- Truncate long text in cells --- */
 .table-cell {
-    -fx-alignment: center;
-    -fx-font-size: 13px;
-    -fx-padding: 6 0 6 0;
-    -fx-background-radius: 8px;
+    -fx-text-overrun: ellipsis-word;
+    -fx-wrap-text: false;
+    -fx-max-width: 110px;
+    -fx-min-width: 30px;
+}
+
+/* --- Sticky Table Header (as much as JavaFX allows) --- */
+.table-view .column-header-background {
+    -fx-position: sticky;
+    -fx-top: 0;
+    -fx-z-index: 2;
 }
