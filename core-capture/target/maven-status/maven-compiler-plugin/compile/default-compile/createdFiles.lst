@@ -1,12 +1,15 @@
 com/wirecat/core_capture/SettingsView.class
+com/wirecat/core_capture/TcpStreamReassembler.class
+com/wirecat/core_capture/PacketAnalysisView.class
+com/wirecat/core_capture/HFTest.class
 com/wirecat/core_capture/CaptureService.class
 com/wirecat/core_capture/PacketModel.class
+com/wirecat/core_capture/AIAnalysisService.class
+com/wirecat/core_capture/GeminiClient.class
 com/wirecat/core_capture/inspector/PacketInspector.class
 com/wirecat/core_capture/PacketDetail.class
 com/wirecat/core_capture/CustomPacket.class
 com/wirecat/core_capture/filter/FilterEngine.class
 com/wirecat/core_capture/MainView.class
-com/wirecat/core_capture/MainView$Conversation.class
-com/wirecat/core_capture/MainView$1.class
 com/wirecat/core_capture/WireCatApp.class
 com/wirecat/core_capture/CapturedPacket.class

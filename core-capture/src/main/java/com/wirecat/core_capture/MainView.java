@@ -1,377 +1,355 @@
 package com.wirecat.core_capture;
 
-import com.wirecat.core_capture.filter.FilterEngine;
-import com.wirecat.core_capture.inspector.PacketInspector;
-import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.scene.Scene;
-import javafx.scene.chart.XYChart;
+import javafx.scene.chart.*;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-
+import java.io.BufferedWriter;
 import java.io.File;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import javafx.beans.binding.Bindings;
+import com.wirecat.core_capture.inspector.PacketInspector;
 
 public class MainView {
-    // Packet capture
     private final ObservableList<CapturedPacket> packets = FXCollections.observableArrayList();
     private final FilteredList<CapturedPacket> view = new FilteredList<>(packets, p -> true);
     private final CaptureService svc;
-    private final XYChart.Series<String, Number> protoSeries = new XYChart.Series<>();
-    private final XYChart.Series<Number, Number> timeSeries = new XYChart.Series<>();
 
-    // UI components
-    private BorderPane root;
-    private SplitPane centerSplit;
     private TableView<CapturedPacket> table;
-    private PacketInspector inspector;
-    private TextArea hexArea;
+    private CheckBox autoScrollToggle;
+    private HBox filterChips;
     private TextField searchField;
-    private FlowPane filterChips;
-    private ToggleButton autoScrollToggle;
-    private ToggleButton asciiToggle;
 
-    // Conversation stats table
-    private TableView<Conversation> convTable;
-    private final ObservableList<Conversation> convData = FXCollections.observableArrayList();
-    private final Map<String, AtomicInteger> convCounts = new HashMap<>();
-
-    // Views
-    private VBox liveView;
-    private VBox httpView;
-    private VBox settingsView;
-    private LocalDateTime startTime;
+    private final XYChart.Series<String, Number> protoSeries = newSeries("Protocols");
+    private final XYChart.Series<Number, Number> timeSeries = newSeries("Packets/sec");
+    private ScheduledExecutorService scheduler;
 
     public MainView(CaptureService svc) {
         this.svc = svc;
-        protoSeries.setName("Protocols");
-        timeSeries.setName("Rate (pkt/s)");
+    }
+
+    private void refreshPredicate() {
+        Predicate<CapturedPacket> protoFilter = p -> 
+            filterChips.getChildren().stream()
+                .filter(node -> ((CheckBox) node).isSelected())
+                .anyMatch(node -> ((CheckBox) node).getText().equalsIgnoreCase(p.getProtocol()));
+        
+        Predicate<CapturedPacket> searchFilter = p -> 
+            p.getSourceIP().contains(searchField.getText()) ||
+            p.getDestinationIP().contains(searchField.getText()) ||
+            String.valueOf(p.getSourcePort()).contains(searchField.getText()) ||
+            String.valueOf(p.getDestinationPort()).contains(searchField.getText());
+
+        view.setPredicate(protoFilter.and(searchFilter));
     }
 
     public void show(Stage stage) {
-        startTime = LocalDateTime.now();
-        inspector = new PacketInspector();
-
-        // Build sections
-        MenuBar menuBar = buildMenuBar();
-        VBox sidebar = buildSidebar();
-        ToolBar toolbar = buildToolBar();
-        TitledPane filterPane = buildFilterPane();
-        table = buildTable();
-
-        // Live view: toolbar, filters, packet table
-        liveView = new VBox(toolbar, filterPane, table);
-        VBox.setVgrow(table, Priority.ALWAYS);
-
-        // HTTP & Settings placeholders
-        httpView = new VBox(new Label("HTTP Objects will appear here"));
-        httpView.setPadding(new Insets(10));
-        settingsView = new VBox(new Label("Settings panel"));
-        settingsView.setPadding(new Insets(10));
-
-        // Inspector + Hex pane
-        VBox inspBox = buildInspectorPane();
-
-        // Center split
-        centerSplit = new SplitPane(liveView, inspBox);
-        centerSplit.setDividerPositions(0.65);
-
+        // Sparkline setup
+        LineChart<Number, Number> spark = createSparkline();
+        
+        // Top controls
+        HBox top = createTopControls(spark);
+        
+        // Left controls
+        VBox left = createLeftControls(stage);
+        
+        // Table setup
+        initializeTable();
+        
+        // Inspector pane
+        SplitPane center = createCenterPane();
+        
+        // Statistics pane
+        VBox right = createRightPane(stage);
+        
         // Status bar
-        Label status = new Label("Idle");
-        svc.onStatus(msg -> Platform.runLater(() -> status.setText(msg)));
-        HBox bottomBar = new HBox(status);
-        bottomBar.setPadding(new Insets(6));
-        bottomBar.getStyleClass().add("status-bar");
-
-        // Root layout
-        root = new BorderPane();
-        root.setTop(menuBar);
-        root.setLeft(sidebar);
-        root.setCenter(centerSplit);
-        root.setBottom(bottomBar);
-
-        // Scene
-        Scene scene = new Scene(root, 1600, 900);
-        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/dark-theme.css")).toExternalForm());
-        scene.addEventHandler(KeyEvent.KEY_PRESSED, this::handleGlobalShortcuts);
-
-        stage.setScene(scene);
-        stage.setTitle("WireCat - Live Packet Analysis");
-        stage.show();
-
+        HBox bottom = createStatusBar();
+        
+        // Main scene setup
+        setupMainScene(stage, top, left, center, right, bottom);
+        
+        // Start capture
         startCapture();
     }
 
-    private MenuBar buildMenuBar() {
-        MenuBar menuBar = new MenuBar();
-        Menu fileMenu = new Menu("File");
-        MenuItem exportPcap = new MenuItem("Export PCAP");
-        exportPcap.setOnAction(e -> executeCommand("export pcap"));
-        fileMenu.getItems().add(exportPcap);
-        menuBar.getMenus().add(fileMenu);
-        return menuBar;
+    private VBox createLeftControls(Stage stage) {
+        Button settingsBtn = new Button("Settings");
+        settingsBtn.setOnAction(e -> {
+            svc.stopCapture();
+            new SettingsView().show(stage);
+        });
+        
+        Button stopBtn = new Button("Stop");
+        stopBtn.setOnAction(e -> svc.stopCapture());
+        
+        VBox left = new VBox(12, settingsBtn, stopBtn);
+        left.setPadding(new Insets(15));
+        return left;
     }
 
-    private TitledPane buildFilterPane() {
-        filterChips = new FlowPane();
-        filterChips.setHgap(10);
-        filterChips.setVgap(5);
-        filterChips.setPadding(new Insets(10));
-        filterChips.getStyleClass().add("filter-chips");
+    private LineChart<Number, Number> createSparkline() {
+        LineChart<Number, Number> spark = new LineChart<>(new NumberAxis(), new NumberAxis());
+        spark.getData().add(timeSeries);
+        spark.setLegendVisible(false);
+        spark.setAnimated(false);
+        spark.setPrefHeight(80);
+        return spark;
+    }
 
-        // Protocol checkboxes
-        for (String proto : new String[]{"TCP", "UDP", "ICMP", "HTTP", "ARP"}) {
+    private HBox createTopControls(LineChart<Number, Number> spark) {
+        Label title = new Label("WIRECAT");
+        filterChips = new HBox(5);
+        for (String proto : List.of("TCP","UDP","ICMP","ARP","HTTP","HTTPS")) {
             CheckBox cb = new CheckBox(proto);
             cb.setSelected(true);
             cb.setOnAction(e -> refreshPredicate());
             filterChips.getChildren().add(cb);
         }
 
-        TitledPane pane = new TitledPane("Filters", filterChips);
-        pane.setCollapsible(false);
-        return pane;
-    }
+        searchField = new TextField();
+        searchField.setPromptText("Search IP/Port…");
+        searchField.textProperty().addListener((o,old,n)-> refreshPredicate());
 
-    private VBox buildInspectorPane() {
-        asciiToggle = new ToggleButton("ASCII");
-        asciiToggle.setOnAction(e -> inspector.setAsciiMode(asciiToggle.isSelected()));
-        asciiToggle.setSelected(true); // default ASCII view
-
-        // Hex area
-        hexArea = new TextArea();
-        hexArea.setEditable(false);
-        hexArea.setWrapText(false);
-        hexArea.getStyleClass().add("details-area");
-        hexArea.setPrefRowCount(10);
-        hexArea.setFont(javafx.scene.text.Font.font("Consolas", 11));
-
-        HBox header = new HBox(new Label("Inspector"), asciiToggle);
-        header.setSpacing(10);
-        header.setPadding(new Insets(8));
-
-        VBox v = new VBox(header, inspector.getNode(), new Label("Hex Dump:"), hexArea);
-        v.setSpacing(4);
-        v.setPadding(new Insets(8));
-        v.getStyleClass().add("details-area");
-        return v;
-    }
-
-    private VBox buildSidebar() {
-        VBox sidebar = new VBox(15);
-        sidebar.setPadding(new Insets(20));
-        sidebar.getStyleClass().add("sidebar");
-        sidebar.setPrefWidth(300);
-
-        Label logo = new Label("WireCat");
-        logo.getStyleClass().add("logo");
-
-        Label convLabel = new Label("Conversations");
-        convLabel.getStyleClass().add("subtitle");
-
-        // Conversation table
-        convTable = new TableView<>(convData);
-        convTable.setPlaceholder(new Label("No traffic yet"));
-        convTable.setPrefHeight(200);
-        TableColumn<Conversation, String> convCol = new TableColumn<>("Conversation");
-        convCol.setCellValueFactory(new PropertyValueFactory<>("conversation"));
-        convCol.setPrefWidth(200);
-        TableColumn<Conversation, Integer> countCol = new TableColumn<>("Packets");
-        countCol.setCellValueFactory(new PropertyValueFactory<>("count"));
-        countCol.setPrefWidth(80);
-        convTable.getColumns().addAll(convCol, countCol);
-        convTable.getSelectionModel().selectedItemProperty().addListener((obs,old,sel)->refreshPredicate());
-
-        ToggleGroup navGroup = new ToggleGroup();
-        VBox navBox = new VBox(8);
-        for (String t : new String[]{"Live View", "Follow Stream", "HTTP Objects", "Settings", "Stop Capture"}) {
-            ToggleButton btn = new ToggleButton(t);
-            btn.setToggleGroup(navGroup);
-            btn.setMaxWidth(Double.MAX_VALUE);
-            btn.getStyleClass().add("sidebar-button");
-            btn.setOnAction(e -> switchView(t));
-            navBox.getChildren().add(btn);
-        }
-        ((ToggleButton)navBox.getChildren().get(0)).setSelected(true);
-
-        autoScrollToggle = new ToggleButton("Auto-Scroll");
+        autoScrollToggle = new CheckBox("Auto‑scroll");
         autoScrollToggle.setSelected(true);
 
-        sidebar.getChildren().addAll(logo, convLabel, convTable, navBox, autoScrollToggle);
-        return sidebar;
+        Button aiBtn = createAIButton();
+
+        HBox top = new HBox(10, spark, title, new Region(), searchField, filterChips, autoScrollToggle, aiBtn);
+        HBox.setHgrow(top.getChildren().get(2), Priority.ALWAYS);
+        top.setPadding(new Insets(10));
+        return top;
     }
 
-    private ToolBar buildToolBar() {
-        searchField = new TextField();
-        searchField.setPromptText("Filter IP / Port / URI");
-        searchField.textProperty().addListener((o,old,txt)->refreshPredicate());
+    private Button createAIButton() {
+        Button aiBtn = new Button("🤖 Ask AI");
+        aiBtn.setOnAction(e -> {
+            CapturedPacket sel = table.getSelectionModel().getSelectedItem();
+            if (sel == null) return;
+            
+            String analysisPrompt = String.format(
+                "Analyze this network packet and explain it to a network administrator:\n" +
+                "Protocol: %s\nSource: %s:%d\nDestination: %s:%d\n" +
+                "Size: %d bytes\nRisk Score: %.1f\nHex Start: %s",
+                sel.getProtocol(),
+                sel.getSourceIP(), sel.getSourcePort(),
+                sel.getDestinationIP(), sel.getDestinationPort(),
+                sel.getLength(), sel.getRiskScore(),
+                sel.getHexDump().substring(0, Math.min(50, sel.getHexDump().length()))
+            );
 
-        Button clearBtn = new Button(); clearBtn.getStyleClass().add("icon-clear"); clearBtn.setOnAction(e->searchField.clear());
-        Button palette = new Button(); palette.getStyleClass().add("icon-palette"); palette.setOnAction(e->openCommandPalette());
-
-        return new ToolBar(searchField, clearBtn, new Separator(), palette);
-    }
-
-    private TableView<CapturedPacket> buildTable() {
-        TableView<CapturedPacket> tv = new TableView<>(view);
-        addColumn(tv, "No", "number", 50);
-        addColumn(tv, "Time", "timestamp", 120);
-        addColumn(tv, "Src IP", "sourceIP", 140);
-        addColumn(tv, "Dst IP", "destinationIP", 140);
-        addColumn(tv, "Proto", "protocol", 80);
-
-        tv.setRowFactory(row->{
-            TableRow<CapturedPacket> r = new TableRow<>();
-            r.setOnContextMenuRequested(evt->{
-                ContextMenu ctx=new ContextMenu();
-                MenuItem follow=new MenuItem("Follow Stream"); follow.setOnAction(a->switchView("Follow Stream"));
-                MenuItem copyHex=new MenuItem("Copy Hex Dump"); copyHex.setOnAction(a->{
-                    ClipboardContent cc=new ClipboardContent(); cc.putString(r.getItem().getHexDump());
-                    Clipboard.getSystemClipboard().setContent(cc);
-                });
-                ctx.getItems().addAll(follow, copyHex);
-                ctx.show(r, evt.getScreenX(), evt.getScreenY());
-            });
-            return r;
-        });
-        tv.getSelectionModel().selectedItemProperty().addListener((o,old,sel)->{
-            if(sel!=null) {
-                inspector.display(sel.getDetail());
-                hexArea.setText(sel.getHexDump());
-            }
-        });
-        tv.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        return tv;
-    }
-
-    private void switchView(String followStream) {
-        switch (followStream) {
-            case "Live View" -> centerSplit.getItems().set(0, liveView);
-            case "Follow Stream" -> centerSplit.getItems().set(0, new VBox(new Label("Follow Stream Placeholder")));
-            case "HTTP Objects" -> centerSplit.getItems().set(0, httpView);
-            case "Settings" -> centerSplit.getItems().set(0, settingsView);
-            case "Stop Capture" -> {
-                svc.stopCapture();
-                centerSplit.getItems().set(0, new VBox(new Label("Capture Stopped")));
-            }
-        }
-    }
-
-    private <T> void addColumn(TableView<CapturedPacket> table,String title,String prop,int w){
-        TableColumn<CapturedPacket,T> col=new TableColumn<>(title);
-        col.setCellValueFactory(new PropertyValueFactory<>(prop)); col.setPrefWidth(w);
-        table.getColumns().add(col);
-    }
-
-    private void startCapture(){
-        new AnimationTimer(){
-            private long lastF=System.nanoTime(), count=0;
-            @Override public void handle(long now){
-                while(!svc.queue().isEmpty()){
-                    CapturedPacket cp= Objects.requireNonNull(svc.queue().poll()).toPacket();
-                    if(!packets.isEmpty()) cp.setDeltaTime(cp.getTimestampMs()-packets.get(packets.size()-1).getTimestampMs());
-                    packets.add(cp);
-                    updateConversationStats(cp);
-                    updateStats(cp);
-                    count++;
+            CompletableFuture.supplyAsync(() -> {
+                try {
+                    return GeminiClient.analyzePacket(analysisPrompt);
+                } catch (Exception ex) {
+                    return "❌ Analysis failed: " + ex.getMessage();
                 }
-                if(now-lastF>1_000_000_000L){
-                    timeSeries.getData().add(new javafx.scene.chart.XYChart.Data<>(
-                            Duration.between(startTime,LocalDateTime.now()).toMillis()/1000.0, count/(double)((now-lastF)/1e9)
-                    ));
-                    lastF=now; count=0; refreshConversationList();
-                }
-                if(autoScrollToggle.isSelected()&& !packets.isEmpty()) table.scrollTo(packets.size()-1);
-            }
-        }.start();
+            }).thenAccept(summary -> Platform.runLater(() -> {
+                TextArea content = new TextArea(summary);
+                content.setWrapText(true);
+                content.setEditable(false);
+                
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setHeaderText("Packet Analysis");
+                alert.getDialogPane().setContent(content);
+                alert.setResizable(true);
+                alert.getDialogPane().setPrefSize(600, 400);
+                alert.showAndWait();
+            }));
+        });
+        return aiBtn;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void initializeTable() {
+        table = new TableView<>();
+        table.getColumns().addAll(
+            col("No","number",60),
+            col("Time","timestamp",120),
+            col("Δ Time","deltaTime",80),
+            col("Src MAC","sourceMAC",140),
+            col("Dst MAC","destinationMAC",140),
+            col("Src IP","sourceIP",140),
+            col("Dst IP","destinationIP",140),
+            col("Proto","protocol",80),
+            col("Src Port","sourcePort",80),
+            col("Dst Port","destinationPort",80),
+            col("Len","length",60),
+            col("Risk","riskScore",60)
+        );
+        table.setItems(view);
+        table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        table.setContextMenu(buildContextMenu());
+    }
+
+    private SplitPane createCenterPane() {
+        VBox inspectorPane = new VBox();
+        inspectorPane.getChildren().add(new PacketInspector().getNode());
+
+        SplitPane center = new SplitPane(table, inspectorPane);
+        center.setOrientation(Orientation.VERTICAL);
+        center.setDividerPositions(0.6);
+        return center;
+    }
+
+    private VBox createRightPane(Stage stage) {
+        BarChart<String, Number> chart = createBarChart();
+        Label totalLabel = new Label();
+        totalLabel.textProperty().bind(Bindings.size(packets).asString("Total: %d"));
+        
+        Button savePcap = new Button("Export PCAP"); 
+        savePcap.setOnAction(e->savePcap(stage));
+        
+        Button saveCsv = new Button("Export CSV"); 
+        saveCsv.setOnAction(e->saveCsv(stage));
+        
+        VBox right = new VBox(20, new Label("Statistics"), chart, totalLabel, savePcap, saveCsv);
+        right.setPadding(new Insets(15)); 
+        right.setPrefWidth(260);
+        return right;
+    }
+
+    private HBox createStatusBar() {
+        Label status = new Label("Idle");
+        svc.onStatus(msg -> Platform.runLater(() -> status.setText(msg)));
+        HBox bottom = new HBox(status);
+        bottom.setPadding(new Insets(6,10,6,10));
+        return bottom;
+    }
+
+    private void setupMainScene(Stage stage, HBox top, VBox left, SplitPane center, VBox right, HBox bottom) {
+        BorderPane root = new BorderPane(center, top, right, bottom, left);
+        Scene scene = new Scene(root, 1400, 900);
+        scene.getStylesheets().add(getClass().getResource("/dark-theme.css").toExternalForm());
+        stage.setScene(scene);
+        stage.setTitle("WireCat");
+        stage.setOnCloseRequest(e -> {
+            scheduler.shutdownNow();
+            svc.stopCapture();
+        });
+        stage.show();
+    }
+
+    private void startCapture() {
         svc.startCapture("eth0","",0);
+        scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.scheduleAtFixedRate(this::drainAndRender, 0, 100, TimeUnit.MILLISECONDS);
     }
 
-    private void updateConversationStats(CapturedPacket p){
-        String conv=p.getSourceIP()+" → "+p.getDestinationIP();
-        convCounts.computeIfAbsent(conv,k->new AtomicInteger()).incrementAndGet();
-    }
-
-    private void refreshConversationList(){
-        var top=convCounts.entrySet().stream()
-                .sorted((a,b)->b.getValue().get()-a.getValue().get())
-                .limit(10)
-                .map(e->new Conversation(e.getKey(), e.getValue().get()))
-                .collect(Collectors.toList());
-        Platform.runLater(() ->{
-            convData.setAll(top);
+    private void drainAndRender() {
+        List<PacketModel> batch = new ArrayList<>();
+        svc.queue().drainTo(batch);
+        if (batch.isEmpty()) return;
+        
+        Platform.runLater(() -> {
+            for (PacketModel pm : batch) {
+                CapturedPacket cp = pm.toPacket();
+                if (!packets.isEmpty()) {
+                    long dt = cp.getTimestampMs() - packets.get(packets.size()-1).getTimestampMs();
+                    cp.setDeltaTime(dt);
+                }
+                packets.add(cp);
+                updateStats(cp);
+            }
+            if (autoScrollToggle.isSelected()) table.scrollTo(packets.size()-1);
         });
     }
 
-    private void refreshPredicate(){
-        Predicate<CapturedPacket> protoPred=p->filterChips.getChildren().stream()
-                .filter(n->((CheckBox)n).isSelected())
-                .anyMatch(n->((CheckBox)n).getText().equalsIgnoreCase(p.getProtocol()));
-        String txt=searchField.getText().trim();
-        Predicate<CapturedPacket> ipPred=FilterEngine.byIp(txt.matches("\\d+(.\\d+){3}")?txt:"");
-        Predicate<CapturedPacket> portPred=FilterEngine.byPort(txt.matches("\\d+")?Integer.parseInt(txt):0);
-        Conversation sel=convTable.getSelectionModel().getSelectedItem();
-        Predicate<CapturedPacket> convPred=p->sel==null || sel.getConversation().equals(p.getSourceIP()+" → "+p.getDestinationIP());
-        view.setPredicate(FilterEngine.combine(protoPred, ipPred, portPred, convPred));
+    private <T> TableColumn<CapturedPacket, T> col(String title, String prop, int w) {
+        TableColumn<CapturedPacket, T> c = new TableColumn<>(title);
+        c.setCellValueFactory(new PropertyValueFactory<>(prop));
+        c.setPrefWidth(w);
+        return c;
     }
 
-    private void handleGlobalShortcuts(KeyEvent e){
-        if(e.isControlDown()&&e.getCode()==KeyCode.K) openCommandPalette();
-        if(e.isControlDown()&&e.getCode()==KeyCode.F) searchField.requestFocus();
+    private ContextMenu buildContextMenu() {
+        MenuItem copy = new MenuItem("Copy rows");
+        copy.setOnAction(e -> {
+            var sel = table.getSelectionModel().getSelectedItems();
+            ClipboardContent cc = new ClipboardContent();
+            cc.putString(sel.stream()
+                .map(p -> p.getNumber()+"\t"+p.getTimestamp()+"\t"+p.getSourceIP()+"→"+p.getDestinationIP())
+                .collect(Collectors.joining("\n")));
+            Clipboard.getSystemClipboard().setContent(cc);
+        });
+        return new ContextMenu(copy);
     }
 
-    private void openCommandPalette(){
-        TextInputDialog dlg=new TextInputDialog();
-        dlg.setTitle("Command Palette"); dlg.setHeaderText("Type a command...");
-        dlg.showAndWait().ifPresent(this::executeCommand);
+    private BarChart<String, Number> createBarChart() {
+        BarChart<String, Number> c = new BarChart<>(new CategoryAxis(), new NumberAxis());
+        c.getData().add(protoSeries);
+        c.setLegendVisible(false);
+        c.setAnimated(false);
+        return c;
     }
 
-    private void executeCommand(String cmd){
-        switch(cmd.toLowerCase()){
-            case "export pcap": {
-                FileChooser fc=new FileChooser(); fc.setTitle("Save PCAP");
-                fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("PCAP files","*.pcap"));
-                File file=fc.showSaveDialog(root.getScene().getWindow()); if(file!=null) svc.save(file);
-                break;
+    private void updateStats(CapturedPacket p) {
+        for (XYChart.Data<String, Number> d : protoSeries.getData()) {
+            if (d.getXValue().equals(p.getProtocol())) {
+                d.setYValue(d.getYValue().intValue()+1);
+                return;
             }
-            case "toggle autoscroll": autoScrollToggle.setSelected(!autoScrollToggle.isSelected()); break;
-            case "focus search": searchField.requestFocus(); break;
+        }
+        protoSeries.getData().add(new XYChart.Data<>(p.getProtocol(), 1));
+    }
+
+    private void savePcap(Stage s) {
+        FileChooser fc = new FileChooser();
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("PCAP","*.pcap"));
+        File f = fc.showSaveDialog(s);
+        if (f != null) svc.save(f);
+    }
+
+    private void saveCsv(Stage s) {
+        FileChooser fc = new FileChooser();
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV","*.csv"));
+        File f = fc.showSaveDialog(s);
+        if (f == null) return;
+        
+        try (BufferedWriter w = new BufferedWriter(new FileWriter(f))) {
+            writeCsvHeader(w);
+            writeCsvData(w);
+        } catch (Exception ex) {
+            Platform.runLater(() -> 
+                new Alert(Alert.AlertType.ERROR, "CSV export failed: " + ex.getMessage()).show()
+            );
         }
     }
 
-    private void updateStats(CapturedPacket p){
-        protoSeries.getData().stream().filter(d->d.getXValue().equals(p.getProtocol()))
-                .findFirst().ifPresentOrElse(d->d.setYValue(d.getYValue().intValue()+1),
-                        ()->protoSeries.getData().add(new javafx.scene.chart.XYChart.Data<>(p.getProtocol(),1)));
+    private void writeCsvHeader(BufferedWriter w) throws Exception {
+        w.write("No,Time,ΔTime,SrcMAC,DstMAC,SrcIP,DstIP,Proto,SrcPort,DstPort,Len,Risk\n");
     }
 
-    public static class Conversation {
-        private final SimpleStringProperty conversation;
-        private final SimpleIntegerProperty count;
-        public Conversation(String conv, int cnt){
-            conversation=new SimpleStringProperty(conv);
-            count=new SimpleIntegerProperty(cnt);
+    private void writeCsvData(BufferedWriter w) throws Exception {
+        for (CapturedPacket p : packets) {
+            w.write(String.format("%d,%s,%d,%s,%s,%s,%s,%s,%d,%d,%d,%.2f\n",
+                p.getNumber(), p.getTimestamp(), p.getDeltaTime(),
+                p.getSourceMAC(), p.getDestinationMAC(),
+                p.getSourceIP(), p.getDestinationIP(),
+                p.getProtocol(), p.getSourcePort(), p.getDestinationPort(),
+                p.getLength(), p.getRiskScore()));
         }
-        public String getConversation(){return conversation.get();}
-        public int getCount(){return count.get();}
+    }
+
+    private <X,Y> XYChart.Series<X,Y> newSeries(String name) {
+        XYChart.Series<X,Y> s = new XYChart.Series<>(); 
+        s.setName(name); 
+        return s;
     }
 }

@@ -74,4 +74,18 @@ public class CapturedPacket {
 
     // Inspector detail
     public PacketDetail getDetail()  { return detail; }
+    public String toAnalysisString() {
+    return String.format(
+        "Packet #%d\nProtocol: %s\nTimestamp: %s\n"
+        + "Source: %s:%d (%s)\nDestination: %s:%d (%s)\n"
+        + "Size: %d bytes\nRisk Score: %.1f\n"
+        + "Hex Start: %s...\nASCII Start: %s...",
+        number, protocol, timestamp,
+        sourceIP, sourcePort, sourceMAC,
+        destinationIP, destinationPort, destinationMAC,
+        length, riskScore,
+        hexDump.substring(0, Math.min(50, hexDump.length())),
+        asciiDump.substring(0, Math.min(50, asciiDump.length()))
+    );
+}
 }
