@@ -2,6 +2,8 @@ package com.wirecat.core_capture.ui.panel;
 
 import com.wirecat.core_capture.model.CapturedPacket;
 import com.wirecat.core_capture.ui.panel.SidebarPanel;
+import com.wirecat.core_capture.ui.panel.TopBarPanel;
+import com.wirecat.core_capture.ui.panel.TablePanel;
 import com.wirecat.core_capture.model.PacketModel;
 import com.wirecat.core_capture.service.CaptureService;
 import com.wirecat.core_capture.service.GeminiClient;
@@ -35,10 +37,10 @@ public class MainView {
     private final FilteredList<CapturedPacket> view = new FilteredList<>(packets, p -> true);
     private final CaptureService svc;
 
-    private TableView<CapturedPacket> table;
     private CheckBox autoScrollToggle;
     private HBox filterChips;
     private TextField searchField;
+    private TablePanel tablePanel;
 
     private final XYChart.Series<String, Number> protoSeries = newSeries("Protocols");
     private final XYChart.Series<Number, Number> timeSeries = newSeries("Packets/sec");
@@ -78,13 +80,15 @@ public class MainView {
         );
 
 
+        this.tablePanel = new TablePanel(view, selected -> {
+            // ...
+        });
+
+
         // Left controls
         // Left controls (Sidebar)
         SidebarPanel sidebar = new SidebarPanel(stage, svc, () -> new SettingsView().show(stage));
 
-        // Table setup
-        initializeTable();
-        
         // Inspector pane
         SplitPane center = createCenterPane();
         
@@ -113,7 +117,7 @@ public class MainView {
     private Button createAIButton() {
         Button aiBtn = new Button("🤖 Ask AI");
         aiBtn.setOnAction(e -> {
-            CapturedPacket sel = table.getSelectionModel().getSelectedItem();
+            CapturedPacket sel = tablePanel.getTableView().getSelectionModel().getSelectedItem();
             if (sel == null) return;
             
             String analysisPrompt = String.format(
@@ -149,33 +153,11 @@ public class MainView {
         return aiBtn;
     }
 
-    @SuppressWarnings("unchecked")
-    private void initializeTable() {
-        table = new TableView<>();
-        table.getColumns().addAll(
-            col("No","number",60),
-            col("Time","timestamp",120),
-            col("Δ Time","deltaTime",80),
-            col("Src MAC","sourceMAC",140),
-            col("Dst MAC","destinationMAC",140),
-            col("Src IP","sourceIP",140),
-            col("Dst IP","destinationIP",140),
-            col("Proto","protocol",80),
-            col("Src Port","sourcePort",80),
-            col("Dst Port","destinationPort",80),
-            col("Len","length",60),
-            col("Risk","riskScore",60)
-        );
-        table.setItems(view);
-        table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        table.setContextMenu(buildContextMenu());
-    }
-
     private SplitPane createCenterPane() {
         VBox inspectorPane = new VBox();
         inspectorPane.getChildren().add(new PacketInspector().getNode());
 
-        SplitPane center = new SplitPane(table, inspectorPane);
+        SplitPane center = new SplitPane(tablePanel, inspectorPane);
         center.setOrientation(Orientation.VERTICAL);
         center.setDividerPositions(0.6);
         return center;
@@ -243,7 +225,8 @@ public class MainView {
                 packets.add(cp);
                 updateStats(cp);
             }
-            if (autoScrollToggle.isSelected()) table.scrollTo(packets.size()-1);
+            if (autoScrollToggle.isSelected()) tablePanel.getTableView().scrollTo(packets.size()-1);
+
         });
     }
 
@@ -252,19 +235,6 @@ public class MainView {
         c.setCellValueFactory(new PropertyValueFactory<>(prop));
         c.setPrefWidth(w);
         return c;
-    }
-
-    private ContextMenu buildContextMenu() {
-        MenuItem copy = new MenuItem("Copy rows");
-        copy.setOnAction(e -> {
-            var sel = table.getSelectionModel().getSelectedItems();
-            ClipboardContent cc = new ClipboardContent();
-            cc.putString(sel.stream()
-                .map(p -> p.getNumber()+"\t"+p.getTimestamp()+"\t"+p.getSourceIP()+"→"+p.getDestinationIP())
-                .collect(Collectors.joining("\n")));
-            Clipboard.getSystemClipboard().setContent(cc);
-        });
-        return new ContextMenu(copy);
     }
 
     private BarChart<String, Number> createBarChart() {
