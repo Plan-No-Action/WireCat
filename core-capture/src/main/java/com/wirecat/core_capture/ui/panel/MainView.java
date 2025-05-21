@@ -1,6 +1,7 @@
 package com.wirecat.core_capture.ui.panel;
 
 import com.wirecat.core_capture.model.CapturedPacket;
+import com.wirecat.core_capture.ui.panel.SidebarPanel;
 import com.wirecat.core_capture.model.PacketModel;
 import com.wirecat.core_capture.service.CaptureService;
 import com.wirecat.core_capture.service.GeminiClient;
@@ -65,13 +66,22 @@ public class MainView {
     public void show(Stage stage) {
         // Sparkline setup
         LineChart<Number, Number> spark = createSparkline();
-        
-        // Top controls
-        HBox top = createTopControls(spark);
-        
+        List<String> protoList = List.of("TCP", "UDP", "ICMP", "ARP", "HTTP", "HTTPS");
+
+        TopBarPanel topBar = new TopBarPanel(
+                spark,
+                protoList,
+                searchText -> { /* implement search filter logic */ },
+                selectedProtocols -> { /* implement protocol filter logic */ },
+                autoScroll -> { /* implement auto-scroll logic */ },
+                () -> { /* implement AI action logic */ }
+        );
+
+
         // Left controls
-        VBox left = createLeftControls(stage);
-        
+        // Left controls (Sidebar)
+        SidebarPanel sidebar = new SidebarPanel(stage, svc, () -> new SettingsView().show(stage));
+
         // Table setup
         initializeTable();
         
@@ -85,25 +95,10 @@ public class MainView {
         HBox bottom = createStatusBar();
         
         // Main scene setup
-        setupMainScene(stage, top, left, center, right, bottom);
-        
+        setupMainScene(stage, topBar, sidebar, center, right, bottom);
+
         // Start capture
         startCapture();
-    }
-
-    private VBox createLeftControls(Stage stage) {
-        Button settingsBtn = new Button("Settings");
-        settingsBtn.setOnAction(e -> {
-            svc.stopCapture();
-            new SettingsView().show(stage);
-        });
-        
-        Button stopBtn = new Button("Stop");
-        stopBtn.setOnAction(e -> svc.stopCapture());
-        
-        VBox left = new VBox(12, settingsBtn, stopBtn);
-        left.setPadding(new Insets(15));
-        return left;
     }
 
     private LineChart<Number, Number> createSparkline() {
@@ -113,31 +108,6 @@ public class MainView {
         spark.setAnimated(false);
         spark.setPrefHeight(80);
         return spark;
-    }
-
-    private HBox createTopControls(LineChart<Number, Number> spark) {
-        Label title = new Label("WIRECAT");
-        filterChips = new HBox(5);
-        for (String proto : List.of("TCP","UDP","ICMP","ARP","HTTP","HTTPS")) {
-            CheckBox cb = new CheckBox(proto);
-            cb.setSelected(true);
-            cb.setOnAction(e -> refreshPredicate());
-            filterChips.getChildren().add(cb);
-        }
-
-        searchField = new TextField();
-        searchField.setPromptText("Search IP/Port…");
-        searchField.textProperty().addListener((o,old,n)-> refreshPredicate());
-
-        autoScrollToggle = new CheckBox("Auto‑scroll");
-        autoScrollToggle.setSelected(true);
-
-        Button aiBtn = createAIButton();
-
-        HBox top = new HBox(10, spark, title, new Region(), searchField, filterChips, autoScrollToggle, aiBtn);
-        HBox.setHgrow(top.getChildren().get(2), Priority.ALWAYS);
-        top.setPadding(new Insets(10));
-        return top;
     }
 
     private Button createAIButton() {
@@ -236,10 +206,13 @@ public class MainView {
         return bottom;
     }
 
-    private void setupMainScene(Stage stage, HBox top, VBox left, SplitPane center, VBox right, HBox bottom) {
-        BorderPane root = new BorderPane(center, top, right, bottom, left);
+    private void setupMainScene(Stage stage, TopBarPanel topBar, VBox sidebar, SplitPane center, VBox right, HBox bottom) {
+        BorderPane root = new BorderPane(center, topBar, right, bottom, sidebar);
         Scene scene = new Scene(root, 1400, 900);
         scene.getStylesheets().add(getClass().getResource("/css/dark-theme.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/css/components/sidebar.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/css/components/topbar.css").toExternalForm());
+
         stage.setScene(scene);
         stage.setTitle("WireCat");
         stage.setOnCloseRequest(e -> {

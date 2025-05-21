@@ -6,21 +6,6 @@
     -fx-text-fill:       #e0e0e0;    /* primary text */
 }
 
-/* ------------------------------------------------------------
-   Top bar (title + filter)
------------------------------------------------------------- */
-.top-bar {
-    -fx-background-color: #282828;  /* secondary bg */
-    -fx-border-color:     #3a3a3a;  /* separator line */
-    -fx-border-width:     0 0 1 0;  /* bottom border only */
-}
-
-.title-label {
-    -fx-font-size:   18px;
-    -fx-font-weight: bold;
-    -fx-text-fill:   #4caf50;      /* accent green */
-}
-
 /* protocol filter dropdown */
 .protocol-combo {
     -fx-background-color:  #2b2b2b;
