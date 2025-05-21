@@ -1,5 +1,8 @@
-package com.wirecat.core_capture;
+package com.wirecat.core_capture.ui.panel;
 
+import com.wirecat.core_capture.service.AIAnalysisService;
+import com.wirecat.core_capture.service.CaptureService;
+import com.wirecat.core_capture.model.PacketModel;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -11,8 +14,6 @@ import javafx.scene.control.ToolBar;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.beans.property.SimpleStringProperty;
-
-import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class PacketAnalysisView {

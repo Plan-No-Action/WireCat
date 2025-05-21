@@ -1,5 +1,6 @@
 package com.wirecat.core_capture;
 
+import com.wirecat.core_capture.ui.panel.SettingsView;
 import javafx.application.Application;
 import javafx.stage.Stage;
 

@@ -1,6 +1,7 @@
 package com.wirecat.core_capture;
 
-import org.pcap4j.packet.TcpPacket;
+import com.wirecat.core_capture.model.PacketModel;
+
 import java.util.*;
 
 /**

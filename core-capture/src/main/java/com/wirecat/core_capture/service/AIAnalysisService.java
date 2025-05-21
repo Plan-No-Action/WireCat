@@ -1,4 +1,6 @@
-package com.wirecat.core_capture;
+package com.wirecat.core_capture.service;
+
+import com.wirecat.core_capture.model.PacketModel;
 
 import java.util.concurrent.*;
 import java.util.function.Consumer; // Add this import

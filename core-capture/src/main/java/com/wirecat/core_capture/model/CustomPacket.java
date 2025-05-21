@@ -1,5 +1,5 @@
 // src/main/java/com/wirecat/core_capture/Packet.java
-package com.wirecat.core_capture;
+package com.wirecat.core_capture.model;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;

@@ -1,4 +1,4 @@
-package com.wirecat.core_capture;
+package com.wirecat.core_capture.model;
 
 import java.util.Map;
 

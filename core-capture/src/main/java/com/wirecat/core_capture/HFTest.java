@@ -1,5 +1,7 @@
 package com.wirecat.core_capture;
 
+import com.wirecat.core_capture.service.GeminiClient;
+
 public class HFTest {
     public static void main(String[] args) {
         try {

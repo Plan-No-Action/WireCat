@@ -1,6 +1,6 @@
-package com.wirecat.core_capture.inspector;
+package com.wirecat.core_capture.ui.panel;
 
-import com.wirecat.core_capture.PacketDetail;
+import com.wirecat.core_capture.model.PacketDetail;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TreeItem;

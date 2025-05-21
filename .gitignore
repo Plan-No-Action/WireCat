@@ -10,7 +10,7 @@ target/
 *.war
 *.ear
 *.log
-
+core-capture/.env
 # Maven Wrapper
 .mvn/wrapper/maven-wrapper.jar
 .mvn/wrapper/maven-wrapper.properties

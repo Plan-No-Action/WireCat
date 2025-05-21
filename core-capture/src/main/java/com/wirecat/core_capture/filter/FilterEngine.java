@@ -1,6 +1,6 @@
 package com.wirecat.core_capture.filter;
 
-import com.wirecat.core_capture.CapturedPacket;
+import com.wirecat.core_capture.model.CapturedPacket;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 

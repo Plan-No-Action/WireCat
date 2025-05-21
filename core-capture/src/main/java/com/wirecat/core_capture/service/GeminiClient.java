@@ -1,4 +1,4 @@
-package com.wirecat.core_capture;
+package com.wirecat.core_capture.service;
 
 import java.net.URI;
 import java.net.http.*;
