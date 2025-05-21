@@ -1,71 +1,94 @@
 .table-panel {
-    -fx-background-color: #23272b;
-    -fx-padding: 0 0 0 0;
+    -fx-background-color: transparent;
+    -fx-padding: 0 0 8 0;
+    -fx-border-radius: 14px;
+    -fx-effect: dropshadow(gaussian, #24292477, 28, 0.09, 0, 9);
 }
 
-/* TableView Core */
 .table-view {
     -fx-background-color: #23272b;
     -fx-table-cell-border-color: transparent;
-    -fx-table-header-border-color: #2c313a;
-    -fx-font-size: 13.5px;
-    -fx-selection-bar: #56e39f;
-    -fx-selection-bar-non-focused: #414954;
+    -fx-table-header-border-color: transparent;
+    -fx-border-radius: 14px;
+    -fx-background-radius: 14px;
+    -fx-font-size: 13px;
+    -fx-padding: 0;
 }
 
 .table-view .column-header-background {
-    -fx-background-color: #23272b;
-    -fx-border-color: #2c313a;
-    -fx-border-width: 0 0 2px 0;
+    -fx-background-color: #242b27;
+    -fx-border-color: #2b2f2e;
+    -fx-border-width: 0 0 3 0;
+    -fx-background-radius: 14px 14px 0 0;
+    -fx-padding: 0;
+    -fx-effect: dropshadow(gaussian, #1ee08144, 8, 0.08, 0, 2);
 }
 
 .table-view .column-header,
 .table-view .column-header .label {
-    -fx-text-fill: #b4dbbb;
-    -fx-font-size: 13.2px;
-    -fx-font-weight: bold;
-    -fx-padding: 8 0 8 0;
+    -fx-text-fill: #90faad;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-padding: 10 0 10 0;
     -fx-background-color: transparent;
 }
 
-.table-row-cell:odd {
+.table-row-cell {
     -fx-background-color: #23272b;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+    -fx-background-radius: 8px;
 }
-.table-row-cell:even {
-    -fx-background-color: #1b1f22;
-}
+.table-row-cell:odd { -fx-background-color: #252e2a; }
+.table-row-cell:even { -fx-background-color: #222629; }
 .table-row-cell:hover {
-    -fx-background-color: #323d36;
+    -fx-background-color: #303e34AA; /* semi-transparent greenish */
 }
 .table-row-cell:selected, .table-row-cell:focused:selected {
-    -fx-background-color: #38e37d;
+    -fx-background-color: #40e99b !important;
+    -fx-text-fill: #181e19 !important;
+    -fx-effect: dropshadow(gaussian, #12fca9bb, 6, 0.09, 0, 0);
+}
+
+/* Risk badge for pill effect */
+.risk-badge {
+    -fx-background-radius: 12px;
+    -fx-padding: 2 12 2 12;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
     -fx-text-fill: #181e19;
+    -fx-effect: dropshadow(gaussian, #ffffff22, 4, 0.1, 0, 1);
 }
 
 .table-view .placeholder .label {
-    -fx-text-fill: #767b7c;
-    -fx-font-size: 14px;
+    -fx-text-fill: #7da18a;
+    -fx-font-size: 13.5px;
+    -fx-font-style: italic;
+    -fx-alignment: center;
 }
 
-/* New Row Highlight (subtle fade in) */
+/* New Row Highlight (fade in effect, JavaFX may need manual impl) */
 .table-row-cell.new-row {
-    -fx-background-color: #4caf50;
-    -fx-border-color: #81c784;
-    -fx-border-width: 0 0 0 5;
-    -fx-transition: all 0.5s;
+    -fx-background-color: #a7ffcb;
+    -fx-border-color: #57e89c;
+    -fx-border-width: 0 0 0 4;
+    -fx-transition: all 0.7s cubic-bezier(.42,0,.58,1);
 }
 
+/* Custom scrollbars */
 .table-view .virtual-flow .scroll-bar:vertical {
     -fx-background-color: #242b27;
+    -fx-pref-width: 7px;
 }
 .table-view .virtual-flow .scroll-bar .thumb {
-    -fx-background-color: #38e37d;
-    -fx-background-radius: 8px;
+    -fx-background-color: #40e99b;
+    -fx-background-radius: 12px;
+    -fx-pref-width: 5px;
 }
 
-/* Risk badge colors (handled inline in Java, but you can reinforce here if needed) */
 .table-cell {
     -fx-alignment: center;
     -fx-font-size: 13px;
-    -fx-padding: 5 0 5 0;
+    -fx-padding: 6 0 6 0;
+    -fx-background-radius: 8px;
 }

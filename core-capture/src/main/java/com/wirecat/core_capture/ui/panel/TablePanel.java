@@ -17,7 +17,7 @@ public class TablePanel extends VBox {
     private final FilteredList<CapturedPacket> filteredData;
 
     private String searchText = "";
-    private Set<String> selectedProtocols = new HashSet<>();
+    private final Set<String> selectedProtocols = new HashSet<>();
     private boolean autoScroll = true;
 
     public TablePanel(FilteredList<CapturedPacket> filteredList, Consumer<CapturedPacket> onRowSelected) {
@@ -25,22 +25,23 @@ public class TablePanel extends VBox {
         this.tableView = new TableView<>();
         this.tableView.setItems(filteredData);
         this.getStyleClass().add("table-panel");
-        this.setSpacing(2);
+        this.setSpacing(0);
+        this.setStyle("-fx-background-color:transparent;");
 
-        // Table Columns
+        // Table Columns - improved headers, padding, right/left align, truncation
         tableView.getColumns().addAll(
-                col("No", "number", 50),
-                col("Time", "timestamp", 110),
-                col("Δ Time", "deltaTime", 60),
-                colWithTooltip("Src MAC", "sourceMAC", 125),
-                colWithTooltip("Dst MAC", "destinationMAC", 125),
-                colWithTooltip("Src IP", "sourceIP", 120),
-                colWithTooltip("Dst IP", "destinationIP", 120),
-                col("Proto", "protocol", 70),
-                col("Src Port", "sourcePort", 65),
-                col("Dst Port", "destinationPort", 65),
-                col("Len", "length", 60),
-                riskCol("Risk", "riskScore", 65)
+                col("No", "number", 48, "center"),
+                col("Time", "timestamp", 110, "center"),
+                col("Δ Time", "deltaTime", 60, "center"),
+                colWithTooltip("Src MAC", "sourceMAC", 118, "left"),
+                colWithTooltip("Dst MAC", "destinationMAC", 118, "left"),
+                colWithTooltip("Src IP", "sourceIP", 108, "left"),
+                colWithTooltip("Dst IP", "destinationIP", 108, "left"),
+                col("Proto", "protocol", 60, "center"),
+                col("Src Port", "sourcePort", 55, "right"),
+                col("Dst Port", "destinationPort", 55, "right"),
+                col("Len", "length", 44, "right"),
+                riskCol("Risk", "riskScore", 80)
         );
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -48,12 +49,21 @@ public class TablePanel extends VBox {
         tableView.setPlaceholder(new Label("No packets captured."));
         tableView.setFocusTraversable(true);
 
-        // Row selection
+        // Row selection highlight
         tableView.getSelectionModel().selectedItemProperty().addListener((obs, old, selected) -> {
             if (onRowSelected != null) onRowSelected.accept(selected);
         });
 
-        // Context menu
+        // Row hover highlight
+        tableView.setRowFactory(tv -> {
+            TableRow<CapturedPacket> row = new TableRow<>();
+            row.hoverProperty().addListener((obs, wasHovered, isHovered) -> {
+                row.pseudoClassStateChanged(javafx.css.PseudoClass.getPseudoClass("hover"), isHovered);
+            });
+            return row;
+        });
+
+        // Context menu (copy row, copy IP)
         ContextMenu menu = new ContextMenu();
         MenuItem copyRow = new MenuItem("Copy Row");
         copyRow.setOnAction(e -> copySelectedRow(false));
@@ -62,19 +72,16 @@ public class TablePanel extends VBox {
         menu.getItems().addAll(copyRow, copySrcIP);
         tableView.setContextMenu(menu);
 
-        // Keyboard nav: focus highlight
-        tableView.setOnKeyPressed(event -> tableView.requestFocus());
-
         this.getChildren().add(tableView);
         this.setFillWidth(true);
 
-        // Defaults
-        selectedProtocols.addAll(Set.of("TCP","UDP","ICMP","ARP","HTTP","HTTPS"));
+        selectedProtocols.addAll(Set.of("TCP", "UDP", "ICMP", "ARP", "HTTP", "HTTPS"));
         updatePredicate();
     }
 
     public TableView<CapturedPacket> getTableView() { return tableView; }
 
+    // --- Filtering logic
     public void filterBySearch(String search) {
         this.searchText = search == null ? "" : search.trim();
         updatePredicate();
@@ -86,28 +93,8 @@ public class TablePanel extends VBox {
     }
     public void setAutoScroll(boolean enabled) { this.autoScroll = enabled; }
     public void scrollToBottom() {
-        if (autoScroll && !tableView.getItems().isEmpty()) {
+        if (autoScroll && !tableView.getItems().isEmpty())
             tableView.scrollTo(tableView.getItems().size() - 1);
-            // Optional: Highlight new row for 1 second
-            int last = tableView.getItems().size() - 1;
-            TableRow<CapturedPacket> row = getRow(last);
-            if (row != null) {
-                row.getStyleClass().add("new-row");
-                new Thread(() -> {
-                    try { Thread.sleep(1000); } catch (InterruptedException ignored) {}
-                    javafx.application.Platform.runLater(() -> row.getStyleClass().remove("new-row"));
-                }).start();
-            }
-        }
-    }
-
-    // -- Helper for getting TableRow --
-    private TableRow<CapturedPacket> getRow(int index) {
-        for (Object obj : tableView.lookupAll(".table-row-cell")) {
-            TableRow<CapturedPacket> row = (TableRow<CapturedPacket>) obj;
-            if (row.getIndex() == index) return row;
-        }
-        return null;
     }
 
     private void updatePredicate() {
@@ -122,30 +109,39 @@ public class TablePanel extends VBox {
         });
     }
 
-    private <T> TableColumn<CapturedPacket, T> col(String title, String prop, int w) {
+    // --- Column Factories
+
+    private <T> TableColumn<CapturedPacket, T> col(String title, String prop, int w, String align) {
         TableColumn<CapturedPacket, T> c = new TableColumn<>(title);
         c.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>(prop));
         c.setPrefWidth(w);
-        return c;
-    }
-
-    // Column with Tooltip
-    private <T> TableColumn<CapturedPacket, T> colWithTooltip(String title, String prop, int w) {
-        TableColumn<CapturedPacket, T> c = col(title, prop, w);
-        c.setCellFactory(tc -> {
-            TableCell<CapturedPacket, T> cell = new TableCell<>() {
-                @Override protected void updateItem(T item, boolean empty) {
-                    super.updateItem(item, empty);
-                    setText(empty ? null : item == null ? "" : item.toString());
-                    setTooltip(empty || item == null ? null : new Tooltip(item.toString()));
+        c.setStyle("-fx-alignment:" +
+                switch (align) {
+                    case "right" -> "CENTER-RIGHT;";
+                    case "center" -> "CENTER;";
+                    default -> "CENTER-LEFT;";
                 }
-            };
-            return cell;
+        );
+        // Text truncation and padding
+        c.setCellFactory(tc -> new TableCell<>() {
+            @Override protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : item.toString());
+                setTooltip(empty || item == null ? null : new Tooltip(item.toString()));
+                setStyle("-fx-padding: 0 8 0 8; -fx-font-size:13px;");
+                if (!empty && item != null && item.toString().length() > 20)
+                    setText(item.toString().substring(0, 17) + "…");
+            }
         });
         return c;
     }
 
-    // Risk Badge Column
+    // Tooltip and left-align for IP/MACs
+    private <T> TableColumn<CapturedPacket, T> colWithTooltip(String title, String prop, int w, String align) {
+        return col(title, prop, w, align);
+    }
+
+    // Modern color-coded risk badge
     private TableColumn<CapturedPacket, Double> riskCol(String title, String prop, int w) {
         TableColumn<CapturedPacket, Double> c = new TableColumn<>(title);
         c.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>(prop));
@@ -154,22 +150,22 @@ public class TablePanel extends VBox {
             @Override protected void updateItem(Double item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
-                    setText(null);
-                    setStyle("");
+                    setText(null); setGraphic(null); setStyle("");
                 } else {
-                    String label;
-                    String color;
-                    if (item < 3.0)      { label = "Low";    color = "#34c759"; }
-                    else if (item < 7.0) { label = "Medium"; color = "#ffd60a"; }
+                    String label; String color;
+                    if (item < 3.0)      { label = "Low";    color = "#35e171"; }
+                    else if (item < 7.0) { label = "Med";    color = "#ffd60a"; }
                     else                 { label = "High";   color = "#ff453a"; }
-                    setText(label + " (" + String.format("%.1f", item) + ")");
-                    setStyle("-fx-background-radius:7;-fx-background-color:" + color + ";-fx-text-fill:#181e19; -fx-font-weight:bold;");
+                    Label badge = new Label(label + " (" + String.format("%.1f", item) + ")");
+                    badge.getStyleClass().add("risk-badge");
+                    setGraphic(badge); setText(null); setStyle("-fx-alignment:CENTER;");
                 }
             }
         });
         return c;
     }
 
+    // --- Context menu actions
     private void copySelectedRow(boolean onlyIP) {
         CapturedPacket p = tableView.getSelectionModel().getSelectedItem();
         if (p != null) {

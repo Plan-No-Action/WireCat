@@ -1,40 +1,50 @@
 .sidebar-panel {
-    -fx-background-color: #1a2022;
-    -fx-border-color: #212829;
-    -fx-border-width: 0 1 0 0;
+    -fx-background-color: #151a1f;
+    -fx-border-width: 0 1px 0 0;
+    -fx-border-color: #252b30;
+    -fx-effect: dropshadow(gaussian, #00000022, 10, 0.2, 0, 2);
 }
 
 .sidebar-title {
-    -fx-font-size: 19px;
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+    -fx-font-size: 20px;
     -fx-font-weight: bold;
-    -fx-text-fill: #7ffe9c;
-    -fx-padding: 0 0 16 2;
-    -fx-effect: dropshadow(gaussian,#19351b,1,0,0,1);
+    -fx-text-fill: #62e36f;
+    -fx-padding: 2 0 10 4;
 }
 
-.sidebar-btn {
-    -fx-background-color: #23272b;
-    -fx-border-radius: 7px;
-    -fx-background-radius: 7px;
-    -fx-text-fill: #cbeff0;
+.sidebar-controls .sidebar-btn {
+    -fx-background-color: #222e23;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-text-fill: #e0e0e0;
     -fx-font-size: 14px;
-    -fx-padding: 7 0 7 14;
+    -fx-padding: 8 0 8 8;
+    -fx-alignment: CENTER_LEFT;
     -fx-cursor: hand;
-    -fx-border-color: #2ce98f;
-    -fx-border-width: 1;
-    -fx-effect: dropshadow(gaussian,#123516,0.4,0,0,1);
-    -fx-alignment: center-left;
+    -fx-effect: dropshadow(gaussian, #00000011, 2, 0.1, 0, 1);
+    -fx-border-color: #353c42;
+    -fx-border-width: 1px;
+    -fx-margin-bottom: 2px;
+    -fx-transition: background 0.2s;
 }
-.sidebar-btn:hover {
-    -fx-background-color: #272f2a;
-    -fx-text-fill: #7ffe9c;
+
+.sidebar-controls .sidebar-btn:hover {
+    -fx-background-color: #263e29;
 }
-.stop-btn {
-    -fx-background-color: #ff3856;
+
+.sidebar-controls .stop-btn {
+    -fx-background-color: #e24a4a;
     -fx-text-fill: #fff;
-    -fx-border-color: #fa6e9e;
+    -fx-font-weight: bold;
 }
-.stop-btn:hover {
-    -fx-background-color: #ce1e36;
-    -fx-text-fill: #fff;
+
+.sidebar-controls .stop-btn:hover {
+    -fx-background-color: #bb2222;
+}
+
+.sidebar-panel .label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #8e9eac;
+    -fx-padding: 2 2 0 2;
 }
