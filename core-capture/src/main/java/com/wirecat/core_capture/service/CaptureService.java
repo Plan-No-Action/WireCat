@@ -119,4 +119,10 @@ public class CaptureService {
             emitStatus("❌ Save failed: " + e.getMessage());
         }
     }
+
+    public void clearPackets() {
+        capturedPackets.clear();
+        queue.clear();
+        emitStatus("🧹 Packets cleared");
+    }
 }
