@@ -1,37 +1,18 @@
 .topbar-panel {
     -fx-background-color: linear-gradient(to bottom, #27292c99, #212427ee 65%);
-    -fx-border-color: #2d2d2d;
-    -fx-border-width: 0 0 2px 0;
-    -fx-alignment: center-left;
-    -fx-effect: dropshadow(gaussian, #15181844, 3, 0.2, 0, 2);
+    -fx-border-color: #2d2d2d77;
+    -fx-border-width: 0 0 1.5px 0;
+    -fx-padding: 4 12 4 12;
+    -fx-effect: dropshadow(gaussian, #15181844, 3, 0.13, 0, 1.2);
+    -fx-min-height: 39;
+    -fx-max-height: 48;
 }
 
 .topbar-title {
-    -fx-font-size: 26px;
+    -fx-font-size: 22px;
     -fx-font-weight: bold;
     -fx-text-fill: #48fa92;
-    -fx-padding: 0 18 0 10;
-    -fx-effect: dropshadow(gaussian, #181f185a, 2, 0.4, 0, 2);
-}
-
-.filter-chip {
-    -fx-background-color: #262b2d;
-    -fx-border-color: #70fa95;
-    -fx-border-radius: 11px;
-    -fx-background-radius: 11px;
-    -fx-text-fill: #70fa95;
-    -fx-font-size: 12px;
-    -fx-padding: 1 9 1 9;
-    -fx-effect: dropshadow( gaussian , #222  , 1 , 0.08 , 0 , 1 );
-}
-.filter-chip:selected, .filter-chip:focused {
-    -fx-background-color: #70fa95;
-    -fx-text-fill: #23272b;
-    -fx-border-color: #23272b;
-}
-
-.filter-chip:hover {
-    -fx-background-color: #35d586;
+    -fx-padding: 0 10 0 5;
 }
 
 .search-field {
@@ -40,8 +21,34 @@
     -fx-border-radius: 6;
     -fx-background-radius: 6;
     -fx-font-size: 14px;
-    -fx-padding: 0 10 0 10;
+    -fx-padding: 2 10 2 10;
     -fx-text-fill: #e3fae9;
+    -fx-effect: dropshadow(gaussian, #48fa9244, 0.8, 0.10, 0, 0.6);
+    -fx-min-height: 26;
+}
+.search-field:focused {
+    -fx-border-color: #91ffc6;
+    -fx-effect: dropshadow(gaussian, #91ffc699, 1.7, 0.17, 0, 2);
+}
+
+.filter-chip {
+    -fx-background-color: #262b2d;
+    -fx-border-color: #70fa95;
+    -fx-border-radius: 11px;
+    -fx-background-radius: 11px;
+    -fx-text-fill: #70fa95;
+    -fx-font-size: 12.2px;
+    -fx-padding: 1 9 1 9;
+    -fx-transition: background 0.15s, border 0.15s, color 0.15s;
+    -fx-effect: dropshadow(gaussian, #23232344, 0.6, 0.10, 0, 0.5);
+}
+.filter-chip:selected, .filter-chip:focused {
+    -fx-background-color: #70fa95;
+    -fx-text-fill: #23272b;
+    -fx-border-color: #23272b;
+}
+.filter-chip:hover {
+    -fx-background-color: #35d586;
 }
 
 .ai-btn {
@@ -50,7 +57,7 @@
     -fx-font-weight: bold;
     -fx-border-radius: 8px;
     -fx-background-radius: 8px;
-    -fx-padding: 7 18 7 18;
+    -fx-padding: 6 16 6 16;
     -fx-effect: dropshadow(gaussian, #48fa9288, 0.6, 0.25, 0, 1.2);
     -fx-cursor: hand;
     -fx-font-size: 15px;

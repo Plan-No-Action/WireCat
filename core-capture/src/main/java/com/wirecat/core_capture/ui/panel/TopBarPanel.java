@@ -21,52 +21,51 @@ public class TopBarPanel extends HBox {
             Runnable onAI
     ) {
         setAlignment(Pos.CENTER_LEFT);
-        setPadding(new Insets(8, 14, 8, 14));
-        setSpacing(10);
-        setStyle("-fx-background-color: #22292b; -fx-border-color: #33383c; -fx-border-width: 0 0 2 0;");
+        setPadding(new Insets(7, 16, 7, 16));
+        setSpacing(9);
+        getStyleClass().add("topbar-panel");
 
         Label title = new Label("WireCat");
-        title.setStyle("-fx-font-weight: bold; -fx-font-size: 1.14em; -fx-text-fill: #70fa95;");
+        title.getStyleClass().add("topbar-title");
 
         searchField = new TextField();
         searchField.setPromptText("Search IP/Port...");
-        searchField.setPrefWidth(170);
-        searchField.setMinHeight(28);
-        searchField.setStyle("-fx-background-radius: 8px; -fx-border-radius: 8px; -fx-border-color: #47ff6f; -fx-background-color: #262b2d; -fx-text-fill: #e0e0e0; -fx-font-size: 13px;");
+        searchField.setPrefWidth(160);
+        searchField.setMinHeight(26);
+        searchField.getStyleClass().add("topbar-search");
         searchField.textProperty().addListener((o, oldVal, newVal) -> {
             if (onSearch != null) onSearch.accept(newVal);
         });
 
-        filterChips = new HBox(5);
+        filterChips = new HBox(4);
         filterChips.setAlignment(Pos.CENTER_LEFT);
         for (String proto : protocols) {
             CheckBox cb = new CheckBox(proto);
             cb.setSelected(true);
             cb.getStyleClass().add("filter-chip");
-            cb.setMinHeight(24);
-            cb.setStyle("-fx-background-radius: 11px; -fx-padding: 1 9 1 9;");
+            cb.setMinHeight(22);
             cb.setOnAction(e -> onProtocolsChanged.accept(getSelectedProtocols()));
             filterChips.getChildren().add(cb);
         }
 
         autoScrollToggle = new CheckBox("Auto‑scroll");
         autoScrollToggle.setSelected(true);
-        autoScrollToggle.setStyle("-fx-font-size: 12px; -fx-text-fill: #b8ffca;");
+        autoScrollToggle.getStyleClass().add("topbar-autoscroll");
         autoScrollToggle.selectedProperty().addListener((obs, oldVal, newVal) -> {
             if (onAutoScrollChanged != null) onAutoScrollChanged.accept(newVal);
         });
 
         aiBtn = new Button("🤖 Ask AI");
-        aiBtn.setStyle("-fx-background-color: #70fa95; -fx-text-fill: #23272b; -fx-font-weight: bold; -fx-background-radius: 8px; -fx-padding: 0 16 0 16; -fx-font-size: 13px;");
-        aiBtn.setMinHeight(28);
+        aiBtn.getStyleClass().add("ai-btn");
+        aiBtn.setMinHeight(26);
         aiBtn.setOnAction(e -> { if (onAI != null) onAI.run(); });
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         getChildren().setAll(title, searchField, filterChips, spacer, autoScrollToggle, aiBtn);
-        setMinHeight(44);
-        setMaxHeight(44);
+        setMinHeight(40);
+        setMaxHeight(40);
     }
 
     public List<String> getSelectedProtocols() {
