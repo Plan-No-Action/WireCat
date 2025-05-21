@@ -3,112 +3,60 @@ package com.wirecat.core_capture.ui.panel;
 import com.wirecat.core_capture.service.CaptureService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.Separator;
-import javafx.scene.effect.DropShadow;
-import javafx.scene.image.ImageView;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 public class SidebarPanel extends VBox {
-
-    private final Button btnDashboard;
-    private final Button btnSettings;
-    private final Button btnAbout;
-    private final Button btnDocs;
-    private final Button btnStop;
-    private final Button btnExport;
-    private final Button btnFeedback;
-
     public SidebarPanel(Stage stage, CaptureService svc, Runnable onSettings) {
         getStyleClass().add("sidebar-panel");
-        setSpacing(10);
-        setPadding(new Insets(20, 8, 20, 8));
+        setSpacing(18);
+        setPadding(new Insets(20, 16, 20, 18));
         setPrefWidth(180);
-        setAlignment(Pos.TOP_CENTER);
 
-        // 1. Logo/Brand
-        Label logo = new Label("🐾 WireCat");
-        logo.getStyleClass().add("sidebar-logo");
-        logo.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
-        logo.setPadding(new Insets(8,0,18,0));
+        // App Title / Identity
+        Label appTitle = new Label("🐾 WireCat");
+        appTitle.getStyleClass().add("sidebar-title");
+        appTitle.setPadding(new Insets(0, 0, 16, 0));
 
-        // 2. Navigation section
-        btnDashboard = new SidebarButton("🏠", "Dashboard");
-        btnDashboard.setOnAction(e -> {
-            // TODO: Future home/dashboard view
-        });
+        // Controls section
+        VBox controls = new VBox(10);
+        controls.setFillWidth(true);
+        controls.getStyleClass().add("sidebar-controls");
 
-        btnSettings = new SidebarButton("⚙️", "Settings");
-        btnSettings.setOnAction(e -> {
+        Button settingsBtn = new Button("⚙️  Settings");
+        settingsBtn.getStyleClass().add("sidebar-btn");
+        settingsBtn.setMaxWidth(Double.MAX_VALUE);
+        settingsBtn.setOnAction(e -> {
             svc.stopCapture();
             if (onSettings != null) onSettings.run();
         });
 
-        btnAbout = new SidebarButton("ℹ️", "About");
-        btnAbout.setOnAction(e -> {
-            // TODO: Open about dialog
+        Button stopBtn = new Button("🛑 Stop Capture");
+        stopBtn.getStyleClass().addAll("sidebar-btn", "stop-btn");
+        stopBtn.setMaxWidth(Double.MAX_VALUE);
+        stopBtn.setOnAction(e -> svc.stopCapture());
+
+        Button aboutBtn = new Button("❓ About");
+        aboutBtn.getStyleClass().add("sidebar-btn");
+        aboutBtn.setMaxWidth(Double.MAX_VALUE);
+        aboutBtn.setOnAction(e -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION,
+                    "WireCat Network Analyzer\n© 2025 Yacine\nVersion 1.0.0", ButtonType.OK);
+            alert.setHeaderText("About");
+            alert.showAndWait();
         });
 
-        btnDocs = new SidebarButton("📚", "Docs");
-        btnDocs.setOnAction(e -> {
-            // TODO: Open documentation, maybe external link
-        });
+        controls.getChildren().addAll(settingsBtn, stopBtn, aboutBtn);
 
-        // 3. Separator
-        Separator sep1 = new Separator();
-        sep1.setPrefWidth(130);
-
-        // 4. Actions section
-        btnStop = new SidebarButton("⏹️", "Stop Capture");
-        btnStop.getStyleClass().add("sidebar-stop-btn");
-        btnStop.setOnAction(e -> svc.stopCapture());
-
-        btnExport = new SidebarButton("💾", "Export");
-        btnExport.setOnAction(e -> {
-            // TODO: Open export menu/dialog
-        });
-
-        btnFeedback = new SidebarButton("✉️", "Feedback");
-        btnFeedback.setOnAction(e -> {
-            // TODO: Open feedback form/modal
-        });
-
-        // 5. Spacer
+        // Filler and bottom version area
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
-        // 6. Profile (optional)
-        Label userProfile = new Label("Guest\nuser@wirecat");
-        userProfile.getStyleClass().add("sidebar-profile");
-        userProfile.setAlignment(Pos.CENTER_LEFT);
-        userProfile.setPadding(new Insets(12, 6, 6, 6));
-        userProfile.setStyle("-fx-text-fill: #888;-fx-font-size:12px;");
+        Label versionLabel = new Label("v1.0.0\nby Yacine");
+        versionLabel.setStyle("-fx-font-size:10px; -fx-text-fill:#8e9eac; -fx-padding:8 2 0 2;");
+        versionLabel.setAlignment(Pos.CENTER);
 
-        getChildren().addAll(
-                logo,
-                btnDashboard,
-                btnSettings,
-                btnAbout,
-                btnDocs,
-                sep1,
-                btnStop,
-                btnExport,
-                btnFeedback,
-                spacer,
-                userProfile
-        );
-    }
-
-    // Custom Button: Icon + Text, Modern Styles
-    private static class SidebarButton extends Button {
-        public SidebarButton(String icon, String text) {
-            super(icon + "  " + text);
-            getStyleClass().add("sidebar-btn");
-            setPrefWidth(160);
-            setMinHeight(36);
-            setAlignment(Pos.CENTER_LEFT);
-        }
+        getChildren().addAll(appTitle, controls, spacer, versionLabel);
     }
 }

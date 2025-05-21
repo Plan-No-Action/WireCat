@@ -5,46 +5,54 @@ import javafx.beans.binding.Bindings;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.chart.*;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
+import java.util.function.Consumer;
 
 public class StatisticsPanel extends VBox {
-    private final BarChart<String, Number> protoChart;
     private final Label totalLabel;
-    private final Button savePcap;
-    private final Button saveCsv;
+    private final BarChart<String, Number> chart;
 
-    public StatisticsPanel(ObservableList<CapturedPacket> packets, XYChart.Series<String, Number> protoSeries, Stage stage, Runnable savePcapAction, Runnable saveCsvAction) {
+    public StatisticsPanel(ObservableList<CapturedPacket> packets,
+                           XYChart.Series<String, Number> protoSeries,
+                           Stage stage,
+                           Runnable onExportPcap,
+                           Runnable onExportCsv) {
         getStyleClass().add("stats-panel");
-        setSpacing(20);
-        setPadding(new Insets(16));
-        setPrefWidth(260);
+        setSpacing(13);
+        setPadding(new Insets(18, 20, 18, 16));
+        setPrefWidth(270);
 
-        protoChart = new BarChart<>(new CategoryAxis(), new NumberAxis());
-        protoChart.getData().add(protoSeries);
-        protoChart.setLegendVisible(false);
-        protoChart.setAnimated(false);
-        protoChart.setPrefHeight(160);
-        protoChart.getStyleClass().add("stats-chart");
+        Label statsTitle = new Label("📊 Statistics");
+        statsTitle.getStyleClass().add("stats-title");
+
+        chart = new BarChart<>(new CategoryAxis(), new NumberAxis());
+        chart.getData().add(protoSeries);
+        chart.setLegendVisible(false);
+        chart.setAnimated(false);
+        chart.setPrefHeight(180);
+        chart.setId("stats-chart");
 
         totalLabel = new Label();
-        totalLabel.textProperty().bind(Bindings.size(packets).asString("Total: %d"));
+        totalLabel.textProperty().bind(Bindings.size(packets).asString("Total Packets: %,d"));
         totalLabel.getStyleClass().add("total-label");
 
-        savePcap = new Button("Export PCAP");
-        savePcap.getStyleClass().add("save-button");
-        savePcap.setOnAction(e -> savePcapAction.run());
+        Button exportPcapBtn = new Button("💾 Export PCAP");
+        exportPcapBtn.getStyleClass().add("stats-btn");
+        exportPcapBtn.setMaxWidth(Double.MAX_VALUE);
+        exportPcapBtn.setTooltip(new Tooltip("Export captured packets as a .pcap file"));
+        exportPcapBtn.setOnAction(e -> { if (onExportPcap != null) onExportPcap.run(); });
 
-        saveCsv = new Button("Export CSV");
-        saveCsv.getStyleClass().add("save-button");
-        saveCsv.setOnAction(e -> saveCsvAction.run());
+        Button exportCsvBtn = new Button("📑 Export CSV");
+        exportCsvBtn.getStyleClass().add("stats-btn");
+        exportCsvBtn.setMaxWidth(Double.MAX_VALUE);
+        exportCsvBtn.setTooltip(new Tooltip("Export table as .csv"));
+        exportCsvBtn.setOnAction(e -> { if (onExportCsv != null) onExportCsv.run(); });
 
-        getChildren().addAll(new Label("Statistics"), protoChart, totalLabel, savePcap, saveCsv);
+        VBox buttons = new VBox(8, exportPcapBtn, exportCsvBtn);
+        buttons.setPadding(new Insets(8,0,0,0));
+
+        getChildren().addAll(statsTitle, chart, totalLabel, buttons);
     }
 }
