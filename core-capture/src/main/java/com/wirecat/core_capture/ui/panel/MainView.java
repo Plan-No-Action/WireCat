@@ -47,12 +47,13 @@ public class MainView {
 
         // Top bar connects to TablePanel for search/filter/autoscroll
         TopBarPanel topBar = new TopBarPanel(
-                spark, protoList,
-                search -> tablePanel.filterBySearch(search),
-                protos -> tablePanel.filterByProtocols(protos),
-                tablePanel::setAutoScroll,
-                this::showAIAnalysisDialog
+                protoList,
+                searchText -> tablePanel.filterBySearch(searchText),
+                selectedProtocols -> tablePanel.filterByProtocols(selectedProtocols),
+                autoScroll -> tablePanel.setAutoScroll(autoScroll),
+                () -> {/* AI action */}
         );
+
 
         VBox right = createRightPane(stage);
         SidebarPanel sidebar = new SidebarPanel(stage, svc, () -> new SettingsView().show(stage));

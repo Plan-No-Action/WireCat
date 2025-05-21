@@ -10,19 +10,18 @@ import javafx.stage.Stage;
 public class SidebarPanel extends VBox {
     public SidebarPanel(Stage stage, CaptureService svc, Runnable onSettings) {
         getStyleClass().add("sidebar-panel");
-        setSpacing(18);
-        setPadding(new Insets(20, 16, 20, 18));
-        setPrefWidth(180);
+        setSpacing(14);
+        setPadding(new Insets(18, 12, 18, 16));
+        setPrefWidth(168);
 
-        // App Title / Identity
-        Label appTitle = new Label("🐾 WireCat");
+        // App Title / Brand
+        Label appTitle = new Label("WireCat");
         appTitle.getStyleClass().add("sidebar-title");
-        appTitle.setPadding(new Insets(0, 0, 16, 0));
+        appTitle.setStyle("-fx-font-size: 1.21em; -fx-font-weight: bold; -fx-text-fill: #7ffe9c; -fx-padding: 0 0 12 2;");
 
         // Controls section
-        VBox controls = new VBox(10);
+        VBox controls = new VBox(9);
         controls.setFillWidth(true);
-        controls.getStyleClass().add("sidebar-controls");
 
         Button settingsBtn = new Button("⚙️  Settings");
         settingsBtn.getStyleClass().add("sidebar-btn");
@@ -32,7 +31,7 @@ public class SidebarPanel extends VBox {
             if (onSettings != null) onSettings.run();
         });
 
-        Button stopBtn = new Button("🛑 Stop Capture");
+        Button stopBtn = new Button("⏹ Stop Capture");
         stopBtn.getStyleClass().addAll("sidebar-btn", "stop-btn");
         stopBtn.setMaxWidth(Double.MAX_VALUE);
         stopBtn.setOnAction(e -> svc.stopCapture());
@@ -49,14 +48,21 @@ public class SidebarPanel extends VBox {
 
         controls.getChildren().addAll(settingsBtn, stopBtn, aboutBtn);
 
-        // Filler and bottom version area
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
-        Label versionLabel = new Label("v1.0.0\nby Yacine");
-        versionLabel.setStyle("-fx-font-size:10px; -fx-text-fill:#8e9eac; -fx-padding:8 2 0 2;");
-        versionLabel.setAlignment(Pos.CENTER);
+        // Bottom info
+        VBox bottomBox = new VBox();
+        bottomBox.setAlignment(Pos.CENTER_LEFT);
+        bottomBox.setSpacing(2);
 
-        getChildren().addAll(appTitle, controls, spacer, versionLabel);
+        Label credit = new Label("v1.0.0  •  by Yacine");
+        credit.setStyle("-fx-font-size: 10px; -fx-text-fill: #96b0a7; -fx-padding: 4 0 0 1;");
+
+        bottomBox.getChildren().add(credit);
+
+        // Compose
+        getChildren().setAll(appTitle, controls, spacer, bottomBox);
+        setStyle("-fx-background-color: #1a2022; -fx-border-color: #2a2f31; -fx-border-width: 0 1 0 0; -fx-effect: dropshadow(gaussian,#222,2,0,0,1);");
     }
 }

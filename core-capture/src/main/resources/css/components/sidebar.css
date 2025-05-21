@@ -1,47 +1,40 @@
 .sidebar-panel {
-    -fx-background-color: linear-gradient(to bottom, #202326ee, #181b1d 95%);
-    -fx-border-color: #35373a;
-    -fx-border-width: 0 2.5px 0 0;
-    -fx-effect: dropshadow(gaussian, #12151655, 3, 0.2, 1.2, 2);
-    -fx-spacing: 18px;
+    -fx-background-color: #1a2022;
+    -fx-border-color: #212829;
+    -fx-border-width: 0 1 0 0;
 }
 
 .sidebar-title {
-    -fx-font-size: 23px;
+    -fx-font-size: 19px;
     -fx-font-weight: bold;
-    -fx-text-fill: #4caf50;
-    -fx-padding: 0 0 16 0;
+    -fx-text-fill: #7ffe9c;
+    -fx-padding: 0 0 16 2;
+    -fx-effect: dropshadow(gaussian,#19351b,1,0,0,1);
 }
 
-.sidebar-controls .sidebar-btn {
-    -fx-background-color: #23282d;
-    -fx-text-fill: #e2ffe6;
-    -fx-font-size: 15px;
-    -fx-font-weight: bold;
-    -fx-background-radius: 10px;
+.sidebar-btn {
+    -fx-background-color: #23272b;
+    -fx-border-radius: 7px;
+    -fx-background-radius: 7px;
+    -fx-text-fill: #cbeff0;
+    -fx-font-size: 14px;
+    -fx-padding: 7 0 7 14;
     -fx-cursor: hand;
-    -fx-padding: 9 0 9 12;
-    -fx-effect: dropshadow(gaussian, #4caf5020, 1.5, 0.16, 0, 1);
-    -fx-border-width: 1px;
-    -fx-border-color: #4caf50;
-    -fx-border-radius: 10px;
-    -fx-transition: all 0.18s;
+    -fx-border-color: #2ce98f;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian,#123516,0.4,0,0,1);
+    -fx-alignment: center-left;
 }
-.sidebar-controls .sidebar-btn:hover {
-    -fx-background-color: #353d3a;
-    -fx-text-fill: #4caf50;
-    -fx-border-color: #fff;
+.sidebar-btn:hover {
+    -fx-background-color: #272f2a;
+    -fx-text-fill: #7ffe9c;
 }
-.sidebar-controls .stop-btn {
-    -fx-background-color: #ff4848;
+.stop-btn {
+    -fx-background-color: #ff3856;
     -fx-text-fill: #fff;
-    -fx-border-color: #ff6a6a;
+    -fx-border-color: #fa6e9e;
 }
-.sidebar-controls .stop-btn:hover {
-    -fx-background-color: #cc3636;
-    -fx-text-fill: #ffecec;
-}
-
-.sidebar-panel Label {
-    -fx-padding: 1 0 1 0;
+.stop-btn:hover {
+    -fx-background-color: #ce1e36;
+    -fx-text-fill: #fff;
 }

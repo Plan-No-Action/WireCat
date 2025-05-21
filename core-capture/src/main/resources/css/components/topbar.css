@@ -15,20 +15,21 @@
 }
 
 .filter-chip {
-    -fx-background-color: #25282b;
-    -fx-border-color: #56e39f;
-    -fx-border-radius: 6;
-    -fx-background-radius: 6;
-    -fx-padding: 3 11 3 11;
-    -fx-text-fill: #56e39f;
-    -fx-font-weight: bold;
-    -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, #56e39f22, 1, 0.25, 0, 0.7);
+    -fx-background-color: #262b2d;
+    -fx-border-color: #70fa95;
+    -fx-border-radius: 11px;
+    -fx-background-radius: 11px;
+    -fx-text-fill: #70fa95;
+    -fx-font-size: 12px;
+    -fx-padding: 1 9 1 9;
+    -fx-effect: dropshadow( gaussian , #222  , 1 , 0.08 , 0 , 1 );
 }
 .filter-chip:selected, .filter-chip:focused {
-    -fx-background-color: #36b670;
-    -fx-text-fill: #fff;
+    -fx-background-color: #70fa95;
+    -fx-text-fill: #23272b;
+    -fx-border-color: #23272b;
 }
+
 .filter-chip:hover {
     -fx-background-color: #35d586;
 }
