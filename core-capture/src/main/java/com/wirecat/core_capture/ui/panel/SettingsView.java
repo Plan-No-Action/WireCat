@@ -13,6 +13,7 @@ import org.pcap4j.core.PcapNetworkInterface;
 import org.pcap4j.core.Pcaps;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class SettingsView {
@@ -34,17 +35,22 @@ public class SettingsView {
     public void show(Stage stage) {
         stage.setTitle("WireCat – Settings");
 
-        // Header
+        // HEADER
         Label header = new Label("Settings");
         header.getStyleClass().add("header-label");
 
-        // Interface selection
+        // --- INTERFACE PICKER ---
         Label ifaceLabel = new Label("Network Interface:");
         ComboBox<String> ifaceCombo = new ComboBox<>();
-        ifaceCombo.setPromptText("Select network interface");
+        ifaceCombo.setPromptText("Select a network interface");
+        ifaceCombo.setPrefWidth(320); // Wider for details
         ObservableList<String> ifaceOptions = FXCollections.observableArrayList(
                 interfaces.stream()
-                        .map(dev -> dev.getDescription() != null ? dev.getDescription() : dev.getName())
+                        .map(dev -> {
+                            String desc = dev.getDescription();
+                            String name = dev.getName();
+                            return desc != null ? desc + "  (" + name + ")" : name;
+                        })
                         .collect(Collectors.toList())
         );
         if (ifaceOptions.isEmpty()) {
@@ -53,66 +59,87 @@ public class SettingsView {
         }
         ifaceCombo.setItems(ifaceOptions);
         ifaceCombo.getSelectionModel().selectFirst();
+        ifaceCombo.setTooltip(new Tooltip("Select the network interface to capture from."));
 
-        // Filter input
+        // --- BPF FILTER ---
         Label filterLabel = new Label("BPF Filter (optional):");
         TextField filterField = new TextField();
         filterField.setPromptText("e.g., tcp port 80");
+        filterField.setTooltip(new Tooltip("Use Berkeley Packet Filter syntax, e.g., \"ip and tcp\"."));
+        Label filterHint = new Label("Leave empty to capture all packets.");
+        filterHint.getStyleClass().add("field-hint");
 
-        // Limit input
+        // --- PACKET LIMIT ---
         Label limitLabel = new Label("Packet Limit:");
         Spinner<Integer> limitSpinner = new Spinner<>(0, Integer.MAX_VALUE, 0, 100);
         limitSpinner.setEditable(true);
+        limitSpinner.setPrefWidth(120);
+        limitSpinner.setTooltip(new Tooltip("Set to 0 for unlimited packet capture."));
         HBox limitBox = new HBox(5, limitSpinner, new Label("(0 = unlimited)"));
         limitBox.setAlignment(Pos.CENTER_LEFT);
 
-        // Action buttons
+        // --- BUTTONS ---
         Button startBtn = new Button("Start Capture");
         startBtn.setDefaultButton(true);
         startBtn.getStyleClass().add("primary-button");
+
+        Button cancelBtn = new Button("Cancel");
+        cancelBtn.getStyleClass().add("cancel-button");
+
         startBtn.setOnAction(evt -> {
             String selected = ifaceCombo.getValue();
             PcapNetworkInterface chosen = interfaces.stream()
-                    .filter(dev -> selected.equals(dev.getDescription()) || selected.equals(dev.getName()))
+                    .filter(dev -> selected.contains(dev.getName()))
                     .findFirst().orElse(null);
             if (chosen == null) {
-                new Alert(Alert.AlertType.ERROR, "Unable to resolve selected interface").showAndWait();
+                Alert a = new Alert(Alert.AlertType.ERROR, "Unable to resolve selected interface");
+                a.showAndWait();
                 return;
             }
+            // Maybe validate filterField here, show error if invalid
             captureService.startCapture(chosen.getName(), filterField.getText().trim(), limitSpinner.getValue());
             new MainView(captureService).show(stage);
         });
 
-        Button cancelBtn = new Button("Cancel");
-        cancelBtn.setCancelButton(true);
         cancelBtn.setOnAction(evt -> Platform.exit());
 
-        HBox buttonBar = new HBox(10, cancelBtn, startBtn);
+        HBox buttonBar = new HBox(12, cancelBtn, startBtn);
         buttonBar.setAlignment(Pos.CENTER_RIGHT);
+        buttonBar.getStyleClass().add("button-bar");
 
-        // Layout in GridPane
+        // --- MAIN LAYOUT ("Card") ---
         GridPane grid = new GridPane();
         grid.setVgap(15);
-        grid.setHgap(10);
-        grid.setPadding(new Insets(20));
+        grid.setHgap(12);
+        grid.setPadding(new Insets(18, 22, 18, 22));
+        grid.setStyle("-fx-background-color: linear-gradient(to bottom, #232829 93%, #1e2226); -fx-background-radius: 14; -fx-effect: dropshadow(gaussian,#2c372c33,8,0.12,0,3);");
+
         ColumnConstraints labelCol = new ColumnConstraints();
         labelCol.setHalignment(HPos.RIGHT);
+        labelCol.setPrefWidth(135);
         ColumnConstraints controlCol = new ColumnConstraints();
         controlCol.setHgrow(Priority.ALWAYS);
         grid.getColumnConstraints().addAll(labelCol, controlCol);
 
         grid.add(header, 0, 0, 2, 1);
+
         grid.add(ifaceLabel, 0, 1);
         grid.add(ifaceCombo, 1, 1);
+
         grid.add(filterLabel, 0, 2);
-        grid.add(filterField, 1, 2);
+        VBox filterBox = new VBox(filterField, filterHint);
+        filterBox.setSpacing(2);
+        grid.add(filterBox, 1, 2);
+
         grid.add(limitLabel, 0, 3);
         grid.add(limitBox, 1, 3);
+
         grid.add(buttonBar, 1, 4);
 
         BorderPane root = new BorderPane(grid);
-        Scene scene = new Scene(root, 480, 320);
-        scene.getStylesheets().add(getClass().getResource("/css/settings.css").toExternalForm());
+        root.setPadding(new Insets(14));
+        Scene scene = new Scene(root, 500, 320);
+        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/css/components/settings.css")).toExternalForm());
 
         stage.setScene(scene);
         stage.show();

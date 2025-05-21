@@ -1,0 +1,95 @@
+.root {
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-background-color: #202323;
+    -fx-text-fill: #e0e0e0;
+}
+
+.header-label {
+    -fx-font-size: 26px;
+    -fx-text-fill: #48fa92;
+    -fx-font-weight: bold;
+    -fx-padding: 0 0 16 0;
+    -fx-effect: dropshadow(gaussian,#202,2,0.1,0,1.4);
+}
+
+.label {
+    -fx-font-size: 15px;
+    -fx-text-fill: #cbe9d4;
+    -fx-font-weight: bold;
+}
+
+.field-hint {
+    -fx-font-size: 12px;
+    -fx-text-fill: #93bfa4;
+    -fx-padding: 0 0 0 2;
+}
+
+.combo-box,
+.text-field,
+.spinner {
+    -fx-background-color: #232d24;
+    -fx-text-fill: #e0e0e0;
+    -fx-prompt-text-fill: #8be9b8;
+    -fx-font-size: 14px;
+    -fx-padding: 7 10;
+    -fx-background-radius: 7;
+    -fx-border-radius: 7;
+    -fx-border-color: #384d3c;
+}
+
+.combo-box .list-cell {
+    -fx-background-color: #232d24;
+    -fx-text-fill: #d2ffe0;
+}
+.combo-box .list-cell:hover,
+.combo-box .list-cell:selected {
+    -fx-background-color: #282e28;
+    -fx-text-fill: #48fa92;
+}
+
+.button {
+    -fx-background-color: #48fa92;
+    -fx-background-radius: 7;
+    -fx-text-fill: #202323;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-padding: 9 24;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian,#48fa9240,1.8,0.16,0,1);
+    -fx-border-color: #262;
+    -fx-border-width: 1.1px;
+    -fx-border-radius: 7;
+}
+.button:hover {
+    -fx-background-color: #34e171;
+    -fx-text-fill: #fff;
+}
+.button:pressed {
+    -fx-background-color: #23b759;
+}
+
+.cancel-button {
+    -fx-background-color: #353b39;
+    -fx-text-fill: #bcc7b6;
+    -fx-font-weight: normal;
+    -fx-effect: dropshadow(gaussian,#202c2025,1,0.04,0,1);
+}
+.cancel-button:hover {
+    -fx-background-color: #232d24;
+    -fx-text-fill: #70fa95;
+}
+
+.button-bar {
+    -fx-spacing: 13;
+    -fx-padding: 24 0 0 0;
+    -fx-alignment: center_right;
+}
+
+.spinner .arrow-button .arrow {
+    -fx-background-color: #48fa92;
+}
+
+.grid-pane {
+    -fx-background-radius: 14;
+    -fx-background-color: linear-gradient(to bottom, #232829 93%, #1e2226);
+}
