@@ -1,0 +1,20 @@
+.inspector-panel {
+    -fx-background-color: #1e1e1e;
+    -fx-padding: 16px 20px;
+    -fx-border-color: #333;
+    -fx-border-width: 1px 0 0 0;
+    -fx-border-radius: 0 0 12px 12px;
+}
+.header-label {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #4caf50;
+    -fx-padding: 0 0 4px 0;
+}
+.details-area, .hex-area {
+    -fx-font-family: "Consolas", "monospace";
+    -fx-font-size: 12px;
+    -fx-background-color: #23272b;
+    -fx-border-radius: 8px;
+    -fx-border-color: #353a3f;
+}

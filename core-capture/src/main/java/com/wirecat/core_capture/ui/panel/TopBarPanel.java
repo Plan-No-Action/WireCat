@@ -1,13 +1,11 @@
 package com.wirecat.core_capture.ui.panel;
 
-import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.chart.LineChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
-
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -25,7 +23,6 @@ public class TopBarPanel extends HBox {
                        Runnable onAI) {
         setSpacing(10);
         setPadding(new Insets(10));
-
         getStyleClass().add("topbar-panel");
 
         Label title = new Label("WIRECAT");
@@ -35,9 +32,8 @@ public class TopBarPanel extends HBox {
         for (String proto : protocols) {
             CheckBox cb = new CheckBox(proto);
             cb.setSelected(true);
-            cb.setOnAction(e -> {
-                onProtocolsChanged.accept(getSelectedProtocols());
-            });
+            cb.getStyleClass().add("filter-chip");
+            cb.setOnAction(e -> onProtocolsChanged.accept(getSelectedProtocols()));
             filterChips.getChildren().add(cb);
         }
 
@@ -54,9 +50,8 @@ public class TopBarPanel extends HBox {
         });
 
         aiBtn = new Button("🤖 Ask AI");
-        aiBtn.setOnAction(e -> {
-            if (onAI != null) onAI.run();
-        });
+        aiBtn.getStyleClass().add("ai-btn");
+        aiBtn.setOnAction(e -> { if (onAI != null) onAI.run(); });
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);

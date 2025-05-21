@@ -1,0 +1,39 @@
+.stats-panel {
+    -fx-background-color: #282828;
+    -fx-border-color: #3a3a3a;
+    -fx-border-width: 0 0 0 1px;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+    -fx-padding: 20px 16px 20px 16px;
+}
+
+.stats-panel .label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #e0e0e0;
+}
+
+.stats-panel .total-label {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #4caf50;
+    -fx-padding: 6px 0 10px 0;
+}
+
+.stats-panel .save-button {
+    -fx-background-color: #4caf50;
+    -fx-background-radius: 6px;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-padding: 6px 12px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.18), 4, 0, 0, 2);
+}
+
+.stats-panel .save-button:hover {
+    -fx-background-color: #43a047;
+}
+
+.stats-panel .stats-chart .default-color0.chart-bar {
+    -fx-bar-fill: #4caf50;
+}
