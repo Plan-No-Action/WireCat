@@ -1,21 +1,71 @@
+.table-panel {
+    -fx-background-color: #23272b;
+    -fx-padding: 0 0 0 0;
+}
+
+/* TableView Core */
 .table-view {
     -fx-background-color: #23272b;
     -fx-table-cell-border-color: transparent;
-    -fx-table-header-border-color: #363a3a;
-    -fx-font-size: 13px;
-    -fx-text-fill: #cfd8dc;
-    -fx-background-radius: 11px;
+    -fx-table-header-border-color: #2c313a;
+    -fx-font-size: 13.5px;
+    -fx-selection-bar: #56e39f;
+    -fx-selection-bar-non-focused: #414954;
 }
 
 .table-view .column-header-background {
-    -fx-background-color: #262a2d;
-    -fx-border-color: #373b3a;
-    -fx-border-width: 0 0 1 0;
+    -fx-background-color: #23272b;
+    -fx-border-color: #2c313a;
+    -fx-border-width: 0 0 2px 0;
 }
 
-.table-row-cell:odd { -fx-background-color: #282c30; }
-.table-row-cell:even { -fx-background-color: #23272b; }
-.table-row-cell:selected {
-    -fx-background-color: #388e3c;
-    -fx-text-fill: white;
+.table-view .column-header,
+.table-view .column-header .label {
+    -fx-text-fill: #b4dbbb;
+    -fx-font-size: 13.2px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 0 8 0;
+    -fx-background-color: transparent;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #23272b;
+}
+.table-row-cell:even {
+    -fx-background-color: #1b1f22;
+}
+.table-row-cell:hover {
+    -fx-background-color: #323d36;
+}
+.table-row-cell:selected, .table-row-cell:focused:selected {
+    -fx-background-color: #38e37d;
+    -fx-text-fill: #181e19;
+}
+
+.table-view .placeholder .label {
+    -fx-text-fill: #767b7c;
+    -fx-font-size: 14px;
+}
+
+/* New Row Highlight (subtle fade in) */
+.table-row-cell.new-row {
+    -fx-background-color: #4caf50;
+    -fx-border-color: #81c784;
+    -fx-border-width: 0 0 0 5;
+    -fx-transition: all 0.5s;
+}
+
+.table-view .virtual-flow .scroll-bar:vertical {
+    -fx-background-color: #242b27;
+}
+.table-view .virtual-flow .scroll-bar .thumb {
+    -fx-background-color: #38e37d;
+    -fx-background-radius: 8px;
+}
+
+/* Risk badge colors (handled inline in Java, but you can reinforce here if needed) */
+.table-cell {
+    -fx-alignment: center;
+    -fx-font-size: 13px;
+    -fx-padding: 5 0 5 0;
 }

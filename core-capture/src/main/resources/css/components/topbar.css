@@ -1,26 +1,75 @@
 .topbar-panel {
-    -fx-background-color: #23272b;
-    -fx-padding: 12px 20px;
-    -fx-border-color: #32363a;
-    -fx-border-width: 0 0 1px 0;
+    -fx-background-color: #24282e;
+    -fx-border-color: #31363e;
+    -fx-border-width: 0 0 1 0;
+    -fx-background-radius: 0 0 14px 14px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 8, 0, 0, 2);
 }
+
 .topbar-title {
-    -fx-font-size: 20px;
+    -fx-font-size: 22px;
     -fx-font-weight: bold;
-    -fx-text-fill: #5ee37c;
+    -fx-text-fill: #56e39f;
+    -fx-letter-spacing: 1px;
+}
+
+.topbar-search {
+    -fx-background-radius: 16px;
+    -fx-background-color: #23272b;
+    -fx-border-color: #333;
+    -fx-border-radius: 16px;
+    -fx-font-size: 15px;
+    -fx-text-fill: #fafafa;
+    -fx-padding: 3 12 3 12;
+    -fx-effect: null;
+    -fx-prompt-text-fill: #8ab39f;
+}
+.topbar-search:focused {
+    -fx-border-color: #56e39f;
+    -fx-background-color: #252f27;
+    -fx-effect: dropshadow(gaussian, #38e37d33, 6, 0, 0, 0);
+}
+
+.filter-chips {
+    -fx-spacing: 6px;
+    -fx-padding: 0 0 0 8px;
 }
 .filter-chip {
-    -fx-background-radius: 8px;
-    -fx-padding: 4 10;
-    -fx-text-fill: #e0e0e0;
+    -fx-background-color: #232b2e;
+    -fx-border-color: #38e37d;
+    -fx-border-width: 1.2px;
+    -fx-background-radius: 16px;
+    -fx-border-radius: 16px;
+    -fx-padding: 3 12 3 12;
+    -fx-text-fill: #b3ffcb;
+    -fx-font-size: 13px;
 }
-.ai-btn {
-    -fx-background-color: #4caf50;
-    -fx-background-radius: 8px;
-    -fx-text-fill: white;
+.filter-chip:selected, .filter-chip:armed, .filter-chip:hover {
+    -fx-background-color: #313f36;
+    -fx-text-fill: #56e39f;
     -fx-font-weight: bold;
-    -fx-padding: 4 16;
+}
+
+.auto-scroll-toggle {
+    -fx-text-fill: #b7bfc9;
+    -fx-font-size: 14px;
+    -fx-padding: 0 4 0 0;
+}
+
+.ai-btn {
+    -fx-background-color: linear-gradient(to right,#2bff9c,#5af3cb);
+    -fx-background-radius: 18px;
+    -fx-text-fill: #24282e;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-padding: 2 20 2 20;
+    -fx-effect: dropshadow(gaussian, rgba(56,227,125,0.08), 3, 0, 0, 0);
+    -fx-border-color: #56e39f;
+    -fx-border-radius: 18px;
+    -fx-border-width: 0.8px;
 }
 .ai-btn:hover {
-    -fx-background-color: #43a047;
+    -fx-background-color: linear-gradient(to right,#56e39f,#7affbc);
+    -fx-text-fill: #0c2016;
 }
