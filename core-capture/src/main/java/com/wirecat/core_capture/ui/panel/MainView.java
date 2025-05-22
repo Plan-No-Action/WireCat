@@ -23,6 +23,9 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 import com.sandec.mdfx.MarkdownView;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Clipboard;
+import javafx.geometry.Pos;
 
 public class MainView {
     private final ObservableList<CapturedPacket> packets = FXCollections.observableArrayList();
@@ -266,6 +269,61 @@ public class MainView {
     private void showAIAnalysisDialog() {
         CapturedPacket sel = tablePanel.getTableView().getSelectionModel().getSelectedItem();
         if (sel == null) return;
+
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("WireCat AI Analysis");
+        dialog.initOwner(tablePanel.getTableView().getScene().getWindow());
+        dialog.getDialogPane().getStylesheets().add(getClass().getResource("/css/components/ai-dialog.css").toExternalForm());
+        dialog.getDialogPane().getStyleClass().add("ai-dialog-root");
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+
+        // Header with Icon & Title & Copy Button
+        HBox header = new HBox(10);
+        header.setPadding(new Insets(18, 18, 8, 18));
+        header.setAlignment(Pos.CENTER_LEFT);
+        Label icon = new Label("\uD83E\uDDEA"); // 🧪
+        icon.getStyleClass().add("ai-dialog-icon");
+        Label title = new Label("AI Packet Analysis");
+        title.getStyleClass().add("ai-dialog-title");
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Button copyBtn = new Button("Copy");
+        copyBtn.getStyleClass().add("ai-dialog-copy-btn");
+        copyBtn.setDisable(true); // Enable when content loaded
+
+        header.getChildren().addAll(icon, title, spacer, copyBtn);
+
+        // Main content area
+        VBox contentBox = new VBox();
+        contentBox.setPadding(new Insets(0, 18, 18, 18));
+        contentBox.setSpacing(8);
+
+        ProgressIndicator progress = new ProgressIndicator();
+        progress.setPrefSize(36, 36);
+        contentBox.setAlignment(Pos.CENTER);
+        contentBox.getChildren().add(progress);
+
+        ScrollPane scrollPane = new ScrollPane(contentBox);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setPrefHeight(370);
+        scrollPane.getStyleClass().add("ai-dialog-scroll");
+
+        VBox mainLayout = new VBox(header, scrollPane);
+        mainLayout.getStyleClass().add("ai-dialog-vbox");
+
+        dialog.getDialogPane().setContent(mainLayout);
+        dialog.getDialogPane().setPrefSize(700, 480);
+        dialog.setResizable(true);
+
+        // Proper close
+        Button closeBtn = (Button) dialog.getDialogPane().lookupButton(ButtonType.CLOSE);
+        closeBtn.setDefaultButton(true);
+        closeBtn.setText("Close");
+
+        dialog.show();
+
+        // Begin async AI analysis
         String analysisPrompt = String.format(
                 "Analyze this network packet and explain it to a network administrator:\n" +
                         "Protocol: %s\nSource: %s:%d\nDestination: %s:%d\n" +
@@ -276,21 +334,35 @@ public class MainView {
                 sel.getLength(), sel.getRiskScore(),
                 sel.getHexDump().substring(0, Math.min(50, sel.getHexDump().length()))
         );
+
         CompletableFuture.supplyAsync(() -> {
             try { return GeminiClient.analyzePacket(analysisPrompt); }
             catch (Exception ex) { return "❌ Analysis failed: " + ex.getMessage(); }
         }).thenAccept(summary -> Platform.runLater(() -> {
+            contentBox.getChildren().clear();
             MarkdownView mdView = new MarkdownView(summary);
-            mdView.setPrefSize(600, 400);
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setHeaderText("Packet Analysis (AI)");
-            alert.getDialogPane().setContent(mdView);
-            alert.setResizable(true);
-            alert.getDialogPane().setPrefSize(600, 400);
-            alert.showAndWait();
+            mdView.getStyleClass().add("ai-dialog-markdown");
+            mdView.setPrefWidth(650);
+            mdView.setMinHeight(340);
+            contentBox.getChildren().add(mdView);
+
+            copyBtn.setDisable(false);
+            copyBtn.setOnAction(e -> {
+                javafx.scene.input.ClipboardContent clip = new javafx.scene.input.ClipboardContent();
+                clip.putString(summary);
+                javafx.scene.input.Clipboard.getSystemClipboard().setContent(clip);
+                copyBtn.setText("Copied!");
+                copyBtn.setDisable(true);
+                new Thread(() -> {
+                    try { Thread.sleep(1200); } catch (InterruptedException ignored) {}
+                    Platform.runLater(() -> {
+                        copyBtn.setText("Copy");
+                        copyBtn.setDisable(false);
+                    });
+                }).start();
+            });
         }));
     }
-
     private void addStylesheets(Scene scene, List<String> stylesheets) {
         for (String css : stylesheets) {
             scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource(css)).toExternalForm());
