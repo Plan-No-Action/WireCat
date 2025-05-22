@@ -3,7 +3,6 @@ package com.wirecat.core_capture.ui.panel;
 import com.wirecat.core_capture.service.CaptureService;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
@@ -15,6 +14,8 @@ public class SidebarPanel extends VBox {
     private final Button startBtn;
     private final Button stopBtn;
     private final Button clearBtn;
+    private final Button exportPcapBtn;
+    private final Button exportCsvBtn;
 
     public SidebarPanel(Stage stage, CaptureService svc, Runnable onSettings) {
         getStyleClass().add("sidebar-panel");
@@ -23,7 +24,7 @@ public class SidebarPanel extends VBox {
         setPrefWidth(196);
 
         // App Title
-        Label appTitle = new Label("");
+        Label appTitle = new Label("WireCat");
         appTitle.getStyleClass().add("sidebar-title");
         appTitle.setPadding(new Insets(2, 0, 8, 0));
 
@@ -72,6 +73,19 @@ public class SidebarPanel extends VBox {
 
         controls.getChildren().addAll(settingsBtn, startBtn, stopBtn, clearBtn);
 
+        // --- Export Controls ---
+        exportPcapBtn = new Button("💾 Export PCAP");
+        exportPcapBtn.getStyleClass().addAll("sidebar-btn", "export-btn");
+        exportPcapBtn.setMaxWidth(Double.MAX_VALUE);
+
+        exportCsvBtn = new Button("📑 Export CSV");
+        exportCsvBtn.getStyleClass().addAll("sidebar-btn", "export-btn");
+        exportCsvBtn.setMaxWidth(Double.MAX_VALUE);
+
+        VBox exportBox = new VBox(7, exportPcapBtn, exportCsvBtn);
+        exportBox.setPadding(new Insets(5, 0, 10, 0));
+        exportBox.setFillWidth(true);
+
         // Error/status
         errorStatus = new Label();
         errorStatus.getStyleClass().add("sidebar-error");
@@ -93,6 +107,7 @@ public class SidebarPanel extends VBox {
                 interfaceLabel,
                 sessionStatus,
                 controls,
+                exportBox,         // <<--- Export buttons grouped here!
                 errorStatus,
                 spacer,
                 aboutPane
@@ -102,7 +117,10 @@ public class SidebarPanel extends VBox {
         updateSessionStatus("Stopped", null);
     }
 
-    // Call this from capture logic
+    // Export button accessors for MainView
+    public Button getExportPcapBtn() { return exportPcapBtn; }
+    public Button getExportCsvBtn() { return exportCsvBtn; }
+
     public void updateSessionStatus(String status, String iface) {
         sessionStatus.setText("Status: " + status);
         interfaceLabel.setText("Interface: " + (iface != null ? iface : "N/A"));

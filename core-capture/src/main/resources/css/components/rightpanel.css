@@ -1,0 +1,97 @@
+/* === Conversation Panel Card === */
+.conversation-panel {
+    -fx-background-color: linear-gradient(to bottom, #1a2326 90%, #181d22);
+    -fx-border-color: #223138;
+    -fx-border-width: 1.3px;
+    -fx-border-radius: 11px;
+    -fx-background-radius: 11px;
+    -fx-padding: 7 7 7 7;
+    -fx-effect: dropshadow(gaussian, #1a946022, 4, 0.11, 0, 1.5);
+}
+.conversation-panel .label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #39ff9e;
+    -fx-padding: 2 0 3 2;
+}
+.conversation-panel .table-view {
+    -fx-background-radius: 7px;
+    -fx-background-color: #22292b;
+    -fx-table-cell-border-color: transparent;
+    -fx-font-size: 11.5px;
+}
+.conversation-panel .column-header-background {
+    -fx-background-color: #20292b;
+    -fx-border-color: #293b33;
+    -fx-border-width: 0 0 1px 0;
+}
+.conversation-panel .table-row-cell:odd {
+    -fx-background-color: #232b2d;
+}
+.conversation-panel .table-row-cell:even {
+    -fx-background-color: #191f21;
+}
+.conversation-panel .table-row-cell:selected {
+    -fx-background-color: #39ff9e;
+    -fx-text-fill: #141b16;
+}
+.conversation-panel .button {
+    -fx-background-color: #29e389;
+    -fx-text-fill: #181e19;
+    -fx-font-size: 11.5px;
+    -fx-background-radius: 7px;
+    -fx-padding: 5 0 5 0;
+}
+
+/* === Statistics Panel Card === */
+.stats-panel {
+    -fx-background-color: linear-gradient(to bottom, #23282d 92%, #1e2328);
+    -fx-border-radius: 11px;
+    -fx-background-radius: 11px;
+    -fx-border-color: #2e3731;
+    -fx-border-width: 1.1px;
+    -fx-padding: 5 9 5 9;
+}
+
+#stats-chart {
+    -fx-background-color: transparent;
+    -fx-border-color: #232b2d;
+    -fx-border-width: 1px;
+    -fx-background-radius: 7px;
+    -fx-border-radius: 7px;
+    -fx-padding: 1 1 2 1;
+}
+.total-label {
+    -fx-font-size: 13.5px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #b2ffe5;
+    -fx-padding: 2 0 2 0;
+}
+.stats-meta {
+    -fx-font-size: 11.5px;
+    -fx-text-fill: #aadfcc;
+    -fx-font-weight: 600;
+    -fx-padding: 0 0 1 0;
+    -fx-opacity: 0.9;
+}
+
+/* BarChart color mapping per protocol */
+#stats-chart .chart-bar-tcp    { -fx-bar-fill: #0094ff; }
+#stats-chart .chart-bar-udp    { -fx-bar-fill: #32c8ff; }
+#stats-chart .chart-bar-icmp   { -fx-bar-fill: #e4ff23; }
+#stats-chart .chart-bar-arp    { -fx-bar-fill: #ffaa00; }
+#stats-chart .chart-bar-http   { -fx-bar-fill: #34c759; }
+#stats-chart .chart-bar-https  { -fx-bar-fill: #2027e5; }
+#stats-chart .chart-bar        { -fx-bar-fill: #39ff9e; }
+#stats-chart .chart-legend,
+#stats-chart .chart-title,
+#stats-chart .axis-label {
+    -fx-text-fill: #8eaea0;
+}
+#stats-chart .axis {
+    -fx-tick-label-fill: #8eaea0;
+    -fx-font-size: 11px;
+}
+#stats-chart .chart-plot-background {
+    -fx-background-color: transparent;
+}

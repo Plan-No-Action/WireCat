@@ -1,5 +1,7 @@
 package com.wirecat.core_capture.ui.panel;
-
+import com.wirecat.core_capture.model.Conversation;
+import com.wirecat.core_capture.model.ConversationKey;
+import java.util.concurrent.ConcurrentHashMap;
 import com.wirecat.core_capture.model.CapturedPacket;
 import com.wirecat.core_capture.model.PacketModel;
 import com.wirecat.core_capture.service.CaptureService;
@@ -26,26 +28,27 @@ public class MainView {
     private final FilteredList<CapturedPacket> filteredPackets = new FilteredList<>(packets, p -> true);
     private final CaptureService svc;
 
+    private final Map<ConversationKey, Conversation> conversationMap = new ConcurrentHashMap<>();
+    private final ObservableList<Conversation> conversationList = FXCollections.observableArrayList();
+
     private final XYChart.Series<String, Number> protoSeries = newSeries("Protocols");
     private final XYChart.Series<Number, Number> timeSeries = newSeries("Packets/sec");
 
     private ScheduledExecutorService scheduler;
     private TablePanel tablePanel;
-    private InspectorPanel inspectorPanel;
 
     public MainView(CaptureService svc) {
         this.svc = svc;
     }
 
+
     public void show(Stage stage) {
         List<String> protoList = List.of("TCP", "UDP", "ICMP", "ARP", "HTTP", "HTTPS");
         LineChart<Number, Number> spark = createSparkline();
 
-        // ---- Modular Panels ----
-        this.inspectorPanel = new InspectorPanel();
+        InspectorPanel inspectorPanel = new InspectorPanel();
         this.tablePanel = new TablePanel(filteredPackets, inspectorPanel::showPacket);
 
-        // Top bar connects to TablePanel for search/filter/autoscroll
         TopBarPanel topBar = new TopBarPanel(
                 protoList,
                 searchText -> tablePanel.filterBySearch(searchText),
@@ -54,26 +57,35 @@ public class MainView {
                 () -> {/* AI action */}
         );
 
+        RightPanel rightPanel = new RightPanel(
+                conversationList,
+                this::onConversationSelected,
+                packets,
+                protoSeries,
+                stage
+        );
 
-        VBox right = createRightPane(stage);
+
         SidebarPanel sidebar = new SidebarPanel(stage, svc, () -> new SettingsView().show(stage));
+        sidebar.getExportPcapBtn().setOnAction(e -> savePcap(stage));
+        sidebar.getExportCsvBtn().setOnAction(e -> saveCsv(stage));
+
         HBox statusBar = createStatusBar();
 
         SplitPane center = new SplitPane(tablePanel, inspectorPanel);
         center.setOrientation(Orientation.VERTICAL);
         center.setDividerPositions(0.6);
 
-        BorderPane root = new BorderPane(center, topBar, right, statusBar, sidebar);
+        BorderPane root = new BorderPane(center, topBar, rightPanel , statusBar, sidebar);
         Scene scene = new Scene(root, 1400, 900);
 
-        // Styles
         addStylesheets(scene, List.of(
                 "/css/dark-theme.css",
                 "/css/components/sidebar.css",
                 "/css/components/topbar.css",
                 "/css/components/inspector.css",
-                "/css/components/statistics.css",
-                "/css/components/statusbar.css"
+                "/css/components/statusbar.css",
+                "/css/components/rightpanel.css"
         ));
 
         stage.setScene(scene);
@@ -87,6 +99,21 @@ public class MainView {
         svc.onStatus(msg -> Platform.runLater(() -> setStatus(statusBar, msg)));
         startCapture();
     }
+
+    private void onConversationSelected(Conversation conv) {
+        if (conv == null) {
+            filteredPackets.setPredicate(p -> true); // Show all
+            return;
+        }
+        filteredPackets.setPredicate(p ->
+                p.getSourceIP().equals(conv.getSrcIP()) &&
+                        p.getSourcePort() == conv.getSrcPort() &&
+                        p.getDestinationIP().equals(conv.getDstIP()) &&
+                        p.getDestinationPort() == conv.getDstPort() &&
+                        p.getProtocol().equals(conv.getProto())
+        );
+    }
+
 
     private void startCapture() {
         svc.startCapture("eth0", "", 0);
@@ -107,6 +134,26 @@ public class MainView {
                 }
                 packets.add(cp);
                 updateStats(cp);
+                // --- Conversation/session tracking ---
+                ConversationKey key = new ConversationKey(cp.getSourceIP(), cp.getSourcePort(),
+                        cp.getDestinationIP(), cp.getDestinationPort(), cp.getProtocol());
+                Conversation conv = conversationMap.get(key);
+                if (conv == null) {
+                    conv = new Conversation(
+                            cp.getSourceIP(), cp.getSourcePort(),
+                            cp.getDestinationIP(), cp.getDestinationPort(), cp.getProtocol(),
+                            cp.getTimestampMs(), cp.getLength(),
+                            cp.getSourceMAC(), cp.getDestinationMAC()   // <-- add these two!
+                    );
+                    conversationMap.put(key, conv);
+                    conversationList.add(conv);
+                } else {
+                    conv.addPacket(cp.getLength(), cp.getTimestampMs());
+                    // To trigger update in TableView, remove and add again
+                    conversationList.remove(conv);
+                    conversationList.add(conv);
+                }
+
             }
             tablePanel.scrollToBottom();
         });
@@ -134,14 +181,7 @@ public class MainView {
         totalLabel.getStyleClass().add("total-label");
         totalLabel.textProperty().bind(Bindings.size(packets).asString("Total: %d"));
 
-        Button savePcap = new Button("Export PCAP");
-        savePcap.getStyleClass().add("save-button");
-        savePcap.setOnAction(e -> savePcap(stage));
-        Button saveCsv = new Button("Export CSV");
-        saveCsv.getStyleClass().add("save-button");
-        saveCsv.setOnAction(e -> saveCsv(stage));
-
-        VBox right = new VBox(20, new Label("Statistics"), chart, totalLabel, savePcap, saveCsv);
+        VBox right = new VBox(20, new Label("Statistics"), chart, totalLabel);
         right.setPadding(new Insets(15));
         right.setPrefWidth(260);
         right.getStyleClass().add("right-pane");
