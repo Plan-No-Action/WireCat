@@ -2,9 +2,9 @@ package com.wirecat.core_capture.model;
 
 public class CapturedPacket {
     private final int number;
-    private final String timestamp;       // human‑readable time string
-    private final long timestampMs;       // epoch millis
-    private long deltaTime;               // ms since previous packet
+    private final String timestamp;
+    private final long timestampMs;
+    private long deltaTime;
     private final String sourceMAC;
     private final String destinationMAC;
     private final String sourceIP;
@@ -16,7 +16,7 @@ public class CapturedPacket {
     private final String hexDump;
     private final String asciiDump;
     private final double riskScore;
-    private final PacketDetail detail;    // parsed per‑layer detail
+    private final PacketDetail detail;
 
     public CapturedPacket(int number,
                           String timestamp,

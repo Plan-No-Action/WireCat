@@ -24,15 +24,44 @@
 
 ```
 WireCat/
-├── model/             # Shared POJOs
-├── core-capture/      # Packet capture engine
-├── filter-inspection/ # Filters and inspection logic
-├── export-admin/      # Exporters and admin tools
-├── ui-desktop/        # JavaFX GUI
-├── docs/              # UMLs, SRS, diagrams, sprint notes
-├── .github/           # GitHub Actions CI
-└── pom.xml            # Multi-module Maven build
+├── .github/                    # GitHub Actions CI workflows
+│   └── workflows/              # CI/CD pipelines
+│
+├── core-capture/               # Main module for capturing and analyzing packets
+│   ├── src/
+│   │   └── main/
+│   │       ├── java/
+│   │       │   └── com/wirecat/core_capture/
+│   │       │       ├── filter/         # Packet filtering logic (by IP, port, protocol, etc.)
+│   │       │       ├── model/          # Data models (CapturedPacket, PacketDetail, Conversation, etc.)
+│   │       │       ├── service/        # Core services (CaptureService, AIAnalysisService)
+│   │       │       ├── ui/panel/       # JavaFX UI panels (InspectorPanel, ConversationPanel)
+│   │       │       └── util/           # Utility classes and helpers
+│   │       └── resources/
+│   │           ├── css/                # JavaFX CSS for styling
+│   │           │   └── components/     # Component-specific styles
+│   │           └── icons/              # Icons used across the UI
+│   └── target/                         # Build output (compiled classes, etc.)
+│       ├── classes/
+│       ├── generated-sources/
+│       └── maven-status/
+│
+├── sample/                     # Sample .pcap files or datasets for testing
+└── pom.xml                     # Multi-module Maven build file
+
 ```
+## 📂 Key Packages Overview
+
+| Package          | Purpose                                             |
+| ---------------- | --------------------------------------------------- |
+| `filter`         | Defines and applies filters for captured packets    |
+| `model`          | Contains core data classes (packets, conversations) |
+| `service`        | Handles live capture, AI integration, export logic  |
+| `ui.panel`       | JavaFX UI panels (viewer, inspector, tracker)       |
+| `util`           | Utilities and support classes                       |
+| `css/components` | Visual styles for UI elements                       |
+| `icons`          | Icon assets used in the frontend                    |
+
 
 ---
 
