@@ -22,6 +22,7 @@ import javafx.beans.binding.Bindings;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
+import com.sandec.mdfx.MarkdownView;
 
 public class MainView {
     private final ObservableList<CapturedPacket> packets = FXCollections.observableArrayList();
@@ -54,7 +55,7 @@ public class MainView {
                 searchText -> tablePanel.filterBySearch(searchText),
                 selectedProtocols -> tablePanel.filterByProtocols(selectedProtocols),
                 autoScroll -> tablePanel.setAutoScroll(autoScroll),
-                () -> {/* AI action */}
+                this::showAIAnalysisDialog
         );
 
         RightPanel rightPanel = new RightPanel(
@@ -266,11 +267,11 @@ public class MainView {
             try { return GeminiClient.analyzePacket(analysisPrompt); }
             catch (Exception ex) { return "❌ Analysis failed: " + ex.getMessage(); }
         }).thenAccept(summary -> Platform.runLater(() -> {
-            TextArea content = new TextArea(summary);
-            content.setWrapText(true); content.setEditable(false);
+            MarkdownView mdView = new MarkdownView(summary);
+            mdView.setPrefSize(600, 400);
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setHeaderText("Packet Analysis");
-            alert.getDialogPane().setContent(content);
+            alert.setHeaderText("Packet Analysis (AI)");
+            alert.getDialogPane().setContent(mdView);
             alert.setResizable(true);
             alert.getDialogPane().setPrefSize(600, 400);
             alert.showAndWait();
