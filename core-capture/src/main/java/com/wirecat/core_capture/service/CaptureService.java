@@ -30,6 +30,8 @@ public class CaptureService {
     public List<PacketModel> getCapturedPackets() { return List.copyOf(capturedPackets); }
 
     public void startCapture(String ifaceName, String bpfFilter, int limit) {
+        stopCapture(); // Ensure any previous capture is stopped
+        queue.clear(); // Clear the queue so UI gets only new packets
         try {
             PcapNetworkInterface device = Pcaps.findAllDevs().stream()
                 .filter(d -> d.getName().equals(ifaceName))

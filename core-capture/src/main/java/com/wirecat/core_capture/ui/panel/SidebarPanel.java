@@ -17,7 +17,7 @@ public class SidebarPanel extends VBox {
     private final Button exportPcapBtn;
     private final Button exportCsvBtn;
 
-    public SidebarPanel(Stage stage, CaptureService svc, Runnable onSettings) {
+    public SidebarPanel(Stage stage, CaptureService svc, Runnable onSettings, Runnable onStart, Runnable onStop) {
         getStyleClass().add("sidebar-panel");
         setSpacing(18);
         setPadding(new Insets(18, 14, 18, 15));
@@ -51,7 +51,7 @@ public class SidebarPanel extends VBox {
         startBtn.getStyleClass().add("sidebar-btn");
         startBtn.setMaxWidth(Double.MAX_VALUE);
         startBtn.setOnAction(e -> {
-            svc.startCapture("eth0", "", 0);
+            if (onStart != null) onStart.run();
             updateSessionStatus("Live", "eth0");
         });
 
@@ -59,7 +59,7 @@ public class SidebarPanel extends VBox {
         stopBtn.getStyleClass().addAll("sidebar-btn", "stop-btn");
         stopBtn.setMaxWidth(Double.MAX_VALUE);
         stopBtn.setOnAction(e -> {
-            svc.stopCapture();
+            if (onStop != null) onStop.run();
             updateSessionStatus("Stopped", null);
         });
 
@@ -120,6 +120,7 @@ public class SidebarPanel extends VBox {
     // Export button accessors for MainView
     public Button getExportPcapBtn() { return exportPcapBtn; }
     public Button getExportCsvBtn() { return exportCsvBtn; }
+    public Button getClearBtn() { return clearBtn; }
 
     public void updateSessionStatus(String status, String iface) {
         sessionStatus.setText("Status: " + status);

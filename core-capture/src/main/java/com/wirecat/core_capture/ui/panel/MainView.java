@@ -28,6 +28,9 @@ public class MainView {
     private final ObservableList<CapturedPacket> packets = FXCollections.observableArrayList();
     private final FilteredList<CapturedPacket> filteredPackets = new FilteredList<>(packets, p -> true);
     private final CaptureService svc;
+    private final String interfaceName;
+    private final String bpfFilter;
+    private final int packetLimit;
 
     private final Map<ConversationKey, Conversation> conversationMap = new ConcurrentHashMap<>();
     private final ObservableList<Conversation> conversationList = FXCollections.observableArrayList();
@@ -38,8 +41,11 @@ public class MainView {
     private ScheduledExecutorService scheduler;
     private TablePanel tablePanel;
 
-    public MainView(CaptureService svc) {
+    public MainView(CaptureService svc, String interfaceName, String bpfFilter, int packetLimit) {
         this.svc = svc;
+        this.interfaceName = interfaceName;
+        this.bpfFilter = bpfFilter;
+        this.packetLimit = packetLimit;
     }
 
 
@@ -67,9 +73,16 @@ public class MainView {
         );
 
 
-        SidebarPanel sidebar = new SidebarPanel(stage, svc, () -> new SettingsView().show(stage));
+        SidebarPanel sidebar = new SidebarPanel(
+                stage,
+                svc,
+                () -> new SettingsView().show(stage),
+                this::startCapture,
+                this::stopCapture
+        );
         sidebar.getExportPcapBtn().setOnAction(e -> savePcap(stage));
         sidebar.getExportCsvBtn().setOnAction(e -> saveCsv(stage));
+        sidebar.getClearBtn().setOnAction(e -> clearAllPackets());
 
         HBox statusBar = createStatusBar();
 
@@ -117,7 +130,7 @@ public class MainView {
 
 
     private void startCapture() {
-        svc.startCapture("eth0", "", 0);
+        svc.startCapture(interfaceName, bpfFilter, packetLimit);
         scheduler = Executors.newSingleThreadScheduledExecutor();
         scheduler.scheduleAtFixedRate(this::drainAndRender, 0, 100, TimeUnit.MILLISECONDS);
     }
@@ -282,5 +295,23 @@ public class MainView {
         for (String css : stylesheets) {
             scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource(css)).toExternalForm());
         }
+    }
+
+    // Clears all UI and backend packet/conversation state
+    private void clearAllPackets() {
+        packets.clear();
+        conversationList.clear();
+        conversationMap.clear();
+        protoSeries.getData().clear();
+        timeSeries.getData().clear();
+        svc.clearPackets();
+    }
+
+    private void stopCapture() {
+        if (scheduler != null) {
+            scheduler.shutdownNow();
+            scheduler = null;
+        }
+        svc.stopCapture();
     }
 }

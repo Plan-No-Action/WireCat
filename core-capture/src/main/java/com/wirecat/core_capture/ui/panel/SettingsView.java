@@ -98,7 +98,7 @@ public class SettingsView {
             }
             // Maybe validate filterField here, show error if invalid
             captureService.startCapture(chosen.getName(), filterField.getText().trim(), limitSpinner.getValue());
-            new MainView(captureService).show(stage);
+            new MainView(captureService, chosen.getName(), filterField.getText().trim(), limitSpinner.getValue()).show(stage);
         });
 
         cancelBtn.setOnAction(evt -> Platform.exit());
